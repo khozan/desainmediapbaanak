@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materi 3: Klasifikasi Media - Media PBA Anak</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        display: ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#818cf8',
+                            DEFAULT: '#4f46e5',
+                            dark: '#3730a3',
+                        },
+                        game: {
+                            yellow: '#fbbf24',
+                            orange: '#f59e0b',
+                            green: '#10b981',
+                            red: '#ef4444',
+                            purple: '#8b5cf6',
+                            pink: '#ec4899',
+                            teal: '#14b8a6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-image: url("https://img.freepik.com/free-vector/hand-drawn-education-pattern-background_23-2149453715.jpg?w=1380&t=st=1709123456~exp=1709124056~hmac=abcdef");
+            background-color: #f3f4f6;
+            background-blend-mode: overlay;
+            background-attachment: fixed;
+            background-size: cover;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        /* FLIP CARD STYLES */
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+            cursor: pointer;
+            height: 320px; /* Fixed height for consistency */
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+
+        .flip-card-front {
+            background-color: white;
+            color: black;
+            border: 2px solid #e5e7eb;
+        }
+
+        .flip-card-back {
+            background: linear-gradient(to bottom right, #ffffff, #f3f4f6);
+            color: #374151;
+            transform: rotateY(180deg);
+            border: 2px solid #4f46e5;
+            overflow-y: auto; /* Allow scrolling if content is long */
+            justify-content: start;
+            padding-top: 2rem;
+        }
+
+        /* Quiz Styles */
+        .option-label { cursor: pointer; transition: all 0.2s ease; }
+        .option-input:checked + .option-label {
+            background-color: #fff7ed;
+            border-color: #f97316;
+            color: #c2410c;
+            box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.1);
+            transform: translateY(-2px);
+        }
+        .option-input:checked + .option-label .circle-check {
+            background-color: #f97316;
+            border-color: #f97316;
+        }
+        .option-input:checked + .option-label .circle-check::after {
+            content: '✔'; color: white; font-size: 10px; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Timer Animation */
+        .timer-warning {
+            animation: pulse-red 1s infinite;
+            background-color: #fee2e2 !important;
+            color: #b91c1c !important;
+            border-color: #b91c1c !important;
+        }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+
+        /* Reading Progress Bar */
+        #reading-progress-container {
+            position: fixed;
+            top: 64px; /* Height of navbar */
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: rgba(229, 231, 235, 0.5);
+            z-index: 40;
+        }
+        #reading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            width: 0%;
+            transition: width 0.1s;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800 min-h-screen flex flex-col">
+
+    <!-- READING PROGRESS -->
+    <div id="reading-progress-container">
+        <div id="reading-progress-bar"></div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="sticky top-0 z-50 glass-panel border-b border-white/40">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="index.html" class="flex items-center gap-2 text-gray-600 hover:text-brand transition font-bold">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                </a>
+                <div class="text-center">
+                    <h1 class="font-display font-bold text-lg text-brand-dark hidden md:block">Klasifikasi Media Pembelajaran</h1>
+                    <span class="text-xs font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Level 3</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="user-name" class="text-xs font-bold text-gray-500 hidden sm:block">Loading...</span>
+                    <div class="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="flex-grow w-full max-w-6xl mx-auto p-4 md:p-6 pb-20 space-y-12">
+
+        <!-- HEADER MATERI -->
+        <div class="glass-panel p-10 rounded-3xl relative overflow-hidden text-center transform transition hover:scale-[1.01] duration-500">
+            <div class="absolute -top-10 -left-10 w-40 h-40 bg-orange-500/10 rounded-full blur-2xl animate-pulse"></div>
+            <div class="absolute bottom-10 right-10 w-40 h-40 bg-brand/10 rounded-full blur-2xl animate-pulse" style="animation-delay: 1s;"></div>
+            
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 text-white text-4xl mb-6 shadow-xl transform -rotate-6 hover:rotate-0 transition duration-300">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <h2 class="font-display font-bold text-4xl text-gray-800 mb-3">Jenis Media Pembelajaran</h2>
+            <p class="text-lg text-gray-500 max-w-2xl mx-auto">Klasifikasi sistematis media Bahasa Arab anak berdasarkan teknologi, interaktivitas, serta kelebihan & keterbatasannya.</p>
+        </div>
+
+        <!-- ISI MATERI (INTERAKTIF) -->
+        <article class="space-y-12">
+            
+            <!-- A. Pendahuluan -->
+            <div class="max-w-4xl mx-auto glass-panel p-8 rounded-3xl border-l-8 border-brand">
+                <h3 class="font-bold text-2xl text-brand mb-4 flex items-center gap-3">
+                    <i class="fa-solid fa-lightbulb text-yellow-400 text-3xl"></i> Mengapa Klasifikasi Penting?
+                </h3>
+                <p class="text-lg leading-relaxed text-gray-700">
+                    Media pembelajaran bukan sekadar alat bantu visual, melainkan <span class="bg-yellow-100 px-1 rounded font-bold">jantung dari sistem pembelajaran</span> yang menentukan motivasi dan efektivitas. Setiap media punya "kekuatan super" dan "kelemahan" masing-masing.
+                </p>
+            </div>
+
+            <!-- B. 9 KLASIFIKASI MEDIA (GRID FLIP CARDS) -->
+            <div>
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="font-display font-bold text-3xl text-gray-800">
+                        <span class="text-brand">9 Jenis</span> Media Utama
+                    </h3>
+                    <p class="text-sm text-gray-500 italic animate-bounce">
+                        <i class="fa-solid fa-hand-pointer"></i> Klik kartu untuk membalik!
+                    </p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <!-- Card 1 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-3xl mb-4">
+                                    <i class="fa-solid fa-book"></i>
+                                </div>
+                                <h4 class="font-bold text-xl text-gray-800">1. Media Cetak</h4>
+                                <p class="text-sm text-gray-500 mt-2">Buku, Flashcard, Poster</p>
+                                <span class="mt-auto text-xs font-bold text-brand uppercase tracking-wider">Lihat Detail <i class="fa-solid fa-arrow-right"></i></span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-brand mb-3">Analisis Media Cetak</h5>
+                                <div class="text-left w-full px-2 space-y-3 text-sm">
+                                    <div class="bg-green-50 p-2 rounded border-l-4 border-green-500">
+                                        <b>Kelebihan:</b> Akses mudah, tanpa listrik, bagus untuk motorik halus (menulis).
+                                    </div>
+                                    <div class="bg-red-50 p-2 rounded border-l-4 border-red-500">
+                                        <b>Keterbatasan:</b> Statis, kurang interaktif, tidak ada audio.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-3xl mb-4">
+                                    <i class="fa-solid fa-mobile-screen"></i>
+                                </div>
+                                <h4 class="font-bold text-xl text-gray-800">2. Aplikasi Interaktif</h4>
+                                <p class="text-sm text-gray-500 mt-2">Al-Furqan, MOLHEM</p>
+                                <span class="mt-auto text-xs font-bold text-brand uppercase tracking-wider">Lihat Detail <i class="fa-solid fa-arrow-right"></i></span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-brand mb-3">Courseware & Apps</h5>
+                                <div class="text-left w-full px-2 space-y-3 text-sm">
+                                    <div class="bg-green-50 p-2 rounded border-l-4 border-green-500">
+                                        <b>Kelebihan:</b> Audio-visual sinkron, interaktif, adaptif (bisa untuk ASD).
+                                    </div>
+                                    <div class="bg-red-50 p-2 rounded border-l-4 border-red-500">
+                                        <b>Keterbatasan:</b> Distraksi layar, risiko kecanduan gadget.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-3xl mb-4">
+                                    <i class="fa-solid fa-photo-film"></i>
+                                </div>
+                                <h4 class="font-bold text-xl text-gray-800">3. Multimedia</h4>
+                                <p class="text-sm text-gray-500 mt-2">Sistem Integrasi Penuh</p>
+                                <span class="mt-auto text-xs font-bold text-brand uppercase tracking-wider">Lihat Detail <i class="fa-solid fa-arrow-right"></i></span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-brand mb-3">Sistem Multimedia</h5>
+                                <div class="text-left w-full px-2 space-y-3 text-sm">
+                                    <div class="bg-green-50 p-2 rounded border-l-4 border-green-500">
+                                        <b>Kelebihan:</b> Menggabungkan teks, gambar, audio, animasi. Cocok untuk berbagai gaya belajar.
+                                    </div>
+                                    <div class="bg-red-50 p-2 rounded border-l-4 border-red-500">
+                                        <b>Keterbatasan:</b> Butuh PC/Tablet, pengembangan rumit.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-3xl mb-4">
+                                    <i class="fa-solid fa-vr-cardboard"></i>
+                                </div>
+                                <h4 class="font-bold text-xl text-gray-800">4. Augmented Reality</h4>
+                                <p class="text-sm text-gray-500 mt-2">ARabic-Kafa, Objek 3D</p>
+                                <span class="mt-auto text-xs font-bold text-brand uppercase tracking-wider">Lihat Detail <i class="fa-solid fa-arrow-right"></i></span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-brand mb-3">Augmented Reality (AR)</h5>
+                                <div class="text-left w-full px-2 space-y-3 text-sm">
+                                    <div class="bg-green-50 p-2 rounded border-l-4 border-green-500">
+                                        <b>Kelebihan:</b> Sangat imersif, memunculkan benda abstrak jadi nyata, motivasi tinggi.
+                                    </div>
+                                    <div class="bg-red-50 p-2 rounded border-l-4 border-red-500">
+                                        <b>Keterbatasan:</b> Mahal, butuh HP spek tinggi.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 5 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-3xl mb-4">
+                                    <i class="fa-solid fa-video"></i>
+                                </div>
+                                <h4 class="font-bold text-xl text-gray-800">5. Audiovisual</h4>
+                                <p class="text-sm text-gray-500 mt-2">Video Animasi, Lagu</p>
+                                <span class="mt-auto text-xs font-bold text-brand uppercase tracking-wider">Lihat Detail <i class="fa-solid fa-arrow-right"></i></span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-brand mb-3">Media Audiovisual</h5>
+                                <div class="text-left w-full px-2 space-y-3 text-sm">
+                                    <div class="bg-green-50 p-2 rounded border-l-4 border-green-500">
+                                        <b>Kelebihan:</b> Menarik perhatian, bagus untuk pelafalan (makhraj).
+                                    </div>
+                                    <div class="bg-red-50 p-2 rounded border-l-4 border-red-500">
+                                        <b>Keterbatasan:</b> Anak cenderung pasif (hanya menonton).
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 6 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 text-3xl mb-4">
+                                    <i class="fa-solid fa-book-open-reader"></i>
+                                </div>
+                                <h4 class="font-bold text-xl text-gray-800">6. Storytelling</h4>
+                                <p class="text-sm text-gray-500 mt-2">Cerita Naratif & Infografis</p>
+                                <span class="mt-auto text-xs font-bold text-brand uppercase tracking-wider">Lihat Detail <i class="fa-solid fa-arrow-right"></i></span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-brand mb-3">Storytelling & Infografis</h5>
+                                <div class="text-left w-full px-2 space-y-3 text-sm">
+                                    <div class="bg-green-50 p-2 rounded border-l-4 border-green-500">
+                                        <b>Kelebihan:</b> Kontekstual, emosional, menyederhanakan konsep rumit.
+                                    </div>
+                                    <div class="bg-red-50 p-2 rounded border-l-4 border-red-500">
+                                        <b>Keterbatasan:</b> Butuh desain narasi kuat. Infografis bisa terlalu abstrak.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 7 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 text-3xl mb-4">
+                                    <i class="fa-solid fa-globe"></i>
+                                </div>
+                                <h4 class="font-bold text-xl text-gray-800">7. E-Learning</h4>
+                                <p class="text-sm text-gray-500 mt-2">Duolingo, Web Learning</p>
+                                <span class="mt-auto text-xs font-bold text-brand uppercase tracking-wider">Lihat Detail <i class="fa-solid fa-arrow-right"></i></span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-brand mb-3">Platform E-Learning</h5>
+                                <div class="text-left w-full px-2 space-y-3 text-sm">
+                                    <div class="bg-green-50 p-2 rounded border-l-4 border-green-500">
+                                        <b>Kelebihan:</b> Akses fleksibel, ada pelacakan progres otomatis.
+                                    </div>
+                                    <div class="bg-red-50 p-2 rounded border-l-4 border-red-500">
+                                        <b>Keterbatasan:</b> Butuh internet & literasi digital.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 8 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 text-3xl mb-4">
+                                    <i class="fa-solid fa-microchip"></i>
+                                </div>
+                                <h4 class="font-bold text-xl text-gray-800">8. Hardware</h4>
+                                <p class="text-sm text-gray-500 mt-2">LED Matrix, Alat Khusus</p>
+                                <span class="mt-auto text-xs font-bold text-brand uppercase tracking-wider">Lihat Detail <i class="fa-solid fa-arrow-right"></i></span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-brand mb-3">Perangkat Khusus</h5>
+                                <div class="text-left w-full px-2 space-y-3 text-sm">
+                                    <div class="bg-green-50 p-2 rounded border-l-4 border-green-500">
+                                        <b>Kelebihan:</b> Visual konkret, sensorimotorik.
+                                    </div>
+                                    <div class="bg-red-50 p-2 rounded border-l-4 border-red-500">
+                                        <b>Keterbatasan:</b> Mahal, materi terbatas.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 9 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-3xl mb-4">
+                                    <i class="fa-solid fa-shuffle"></i>
+                                </div>
+                                <h4 class="font-bold text-xl text-gray-800">9. Kombinasi</h4>
+                                <p class="text-sm text-gray-500 mt-2">Tradisional + Modern</p>
+                                <span class="mt-auto text-xs font-bold text-brand uppercase tracking-wider">Lihat Detail <i class="fa-solid fa-arrow-right"></i></span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-brand mb-3">Hybrid Learning</h5>
+                                <div class="text-left w-full px-2 space-y-3 text-sm">
+                                    <div class="bg-green-50 p-2 rounded border-l-4 border-green-500">
+                                        <b>Kelebihan:</b> Struktur klasik (Nahwu) dengan interaktivitas digital.
+                                    </div>
+                                    <div class="bg-red-50 p-2 rounded border-l-4 border-red-500">
+                                        <b>Keterbatasan:</b> Materi tata bahasa mungkin terlalu berat untuk anak kecil.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Referensi Akademik Accordion -->
+            <details class="glass-panel p-5 rounded-2xl group cursor-pointer transition-all duration-300">
+                <summary class="flex justify-between items-center font-bold text-gray-700 list-none select-none">
+                    <span class="flex items-center gap-2 text-lg"><i class="fa-solid fa-graduation-cap text-brand"></i> Referensi Akademik Lengkap</span>
+                    <span class="transition-transform duration-300 group-open:rotate-180 bg-gray-100 p-2 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-200"><i class="fa-solid fa-chevron-down text-sm"></i></span>
+                </summary>
+                <div class="mt-4 pt-4 border-t border-gray-100 animate-fade-in-up">
+                    <ul class="space-y-3 text-xs text-gray-600 font-mono text-justify pl-2">
+                        <li>Bakri, A., Zakaria, N.H., Muhamad Zainuldin, S.N., & Abusafia, A.H. (2014). A conceptual model of Al-Furqan courseware using persuasive system design for early learning childhood. <i>8th Malaysian Software Engineering Conference, MySEC 2014</i>.</li>
+                        <li>Sweidan, S.Z., Almawajdeh, S.K., Khawaldeh, A.M., & Darabkh, K.A. (2024). MOLHEM: An innovative android application with an interactive avatar-based chatbot for Arab children with ASD. <i>Education and Information Technologies</i>.</li>
+                        <li>Neamah, M.A., Hussain, A., Puteh, N., & Ghazali, O. (2017). Modeling a mobile Arabic learning application for children in Malaysia. <i>Journal of Engineering and Applied Sciences</i>.</li>
+                        <li>Saleh, M., & Alja’am, J.M. (2019). Designing an Educational Multimedia System for Supporting Learning Difficulties in Arabic. <i>Advances in Intelligent Systems and Computing</i>.</li>
+                        <li>Wan Daud, W.A.A., Ghani, M.T.A., Rahman, A.A., & Amiruddin, A.Z. (2021). ARabic-Kafa: Design and development of educational material for Arabic vocabulary with augmented reality technology. <i>Journal of Language and Linguistic Studies</i>.</li>
+                        <li>Baharudin, S., Ismail, M., Ismail, I., & Nasir, S.M. (2010). STAr: Story telling for Arabic language. <i>International Conference on Information Retrieval and Knowledge Management</i>.</li>
+                        <li>Hamid, M.F.B.A., Osman, N.B., Halim, Z.B.A., & Rahman, N.E.B.A. (2020). Need analysis for infographic application in Arabic grammatical learning. <i>Universal Journal of Educational Research</i>.</li>
+                        <li>Ritonga, M., Febriani, S.R., Kustati, M., & Yasmar, R. (2022). Duolingo: An Arabic Speaking Skills’ Learning Platform for Andragogy Education. <i>Education Research International</i>.</li>
+                        <li>Alsumait, A., Al-Osaimi, A., & Alfedaghi, H. (2009). Arab children's reading preference for different online fonts. <i>Lecture Notes in Computer Science</i>.</li>
+                        <li>Tonmoy, A.I., Hossain, M.F., & Hasan, S.Z. (2019). Voice, Gesture and IR Remote Controlled Alphabet Learning Display for Kids Based on 16×16 LED Dot Matrix Display. <i>2nd International Conference on Electrical, Computer and Communication Engineering</i>.</li>
+                        <li>Khairil Asrori, M., & Triyono, M.B. (2020). Development of nahwu learning media based on android. <i>Utopia y Praxis Latinoamericana</i>.</li>
+                    </ul>
+                </div>
+            </details>
+
+        </article>
+
+        <!-- QUIZ GAME SECTION -->
+        <section id="quiz-section" class="mt-12 relative">
+            
+            <!-- START PANEL -->
+            <div id="start-panel" class="glass-panel p-10 rounded-3xl text-center shadow-2xl transform transition hover:scale-[1.02] duration-300 relative overflow-hidden border-2 border-white/50">
+                <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-brand/5 z-0"></div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-orange-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-orange-200 animate-bounce">
+                        <i class="fa-solid fa-layer-group text-4xl text-white"></i>
+                    </div>
+                    <h2 class="font-display font-bold text-3xl text-gray-800 mb-2">Tantangan Materi 3</h2>
+                    <div class="flex items-center gap-4 text-sm text-gray-500 font-bold mb-8 bg-white/50 px-4 py-2 rounded-full">
+                        <span><i class="fa-regular fa-clock text-red-500"></i> 15 Menit</span>
+                        <span>•</span>
+                        <span><i class="fa-solid fa-list-check text-blue-500"></i> 20 Soal</span>
+                        <span>•</span>
+                        <span><i class="fa-solid fa-trophy text-yellow-500"></i> Min. 80</span>
+                    </div>
+                    <button onclick="startQuiz()" class="bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-400 hover:to-orange-600 text-white font-bold py-4 px-12 rounded-2xl shadow-xl shadow-orange-500/30 text-lg transition transform active:scale-95 flex items-center gap-3">
+                        <span>Mulai Sekarang</span> <i class="fa-solid fa-rocket"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TIMER STICKY -->
+            <div id="timer-display" class="hidden fixed top-20 right-4 md:right-10 z-40 bg-white/90 backdrop-blur border-2 border-brand text-brand-dark px-5 py-2 rounded-full font-mono font-bold shadow-lg flex items-center gap-2 transform scale-110">
+                <i class="fa-regular fa-clock animate-pulse"></i> <span id="time-left" class="text-lg">15:00</span>
+            </div>
+
+            <!-- QUIZ FORM -->
+            <form id="quiz-form" onsubmit="event.preventDefault(); submitQuiz();" class="hidden space-y-6 mt-6">
+                <div id="questions-container" class="space-y-6"></div>
+
+                <div class="glass-panel p-6 rounded-2xl sticky bottom-4 z-40 border-t-4 border-orange-500 shadow-2xl">
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm font-bold text-gray-600">
+                            Terjawab: <span id="answered-count" class="text-orange-600 text-lg">0</span>/20
+                        </div>
+                        <button type="submit" id="btn-submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transform active:scale-95 transition flex items-center gap-2">
+                            <span>Kirim Jawaban</span> <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t py-6 mt-10">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <p class="font-display font-bold text-gray-400 text-sm">© 2024 Desain Pengembangan Media Ajar Bahasa Arab.</p>
+        </div>
+    </footer>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, updateDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-jHdi3VVu9F5i6tLIjGJCcVFfHBieqbI",
+            authDomain: "desain-mediapba-anak.firebaseapp.com",
+            projectId: "desain-mediapba-anak",
+            storageBucket: "desain-mediapba-anak.firebasestorage.app",
+            messagingSenderId: "118347735703",
+            appId: "1:118347735703:web:bafeb4590ddbe85f7c7fd2",
+            measurementId: "G-RN0S3X8V27"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let quizInterval;
+        let timeRemaining = 15 * 60; 
+
+        // READING PROGRESS LOGIC
+        window.onscroll = function() {
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            document.getElementById("reading-progress-bar").style.width = scrolled + "%";
+        };
+
+        // SOAL MATERI 3 (20 SOAL)
+        const quizData = [
+            { q: "Yang termasuk media cetak dalam pembelajaran Bahasa Arab adalah …", options: ["Aplikasi mobile", "Video animasi", "Buku teks", "Augmented Reality", "Chatbot interaktif"], a: 2 },
+            { q: "ARabic-Kafa merupakan contoh media berbasis …", options: ["Multimedia statis", "E-learning konvensional", "Augmented Reality", "Media cetak", "Audio rekaman"], a: 2 },
+            { q: "Metode Al-Furqan dikembangkan berdasarkan urutan …", options: ["Tata bahasa klasik", "Kosakata tematik", "Bunyi pertama yang diucapkan bayi", "Cerita rakyat Arab", "Struktur nahwu lanjutan"], a: 2 },
+            { q: "LED Matrix Display termasuk kategori …", options: ["Media audiovisual", "Media cetak", "Perangkat khusus (hardware-based media)", "Platform e-learning", "Storytelling"], a: 2 },
+            { q: "Kelebihan utama media cetak adalah …", options: ["Interaktivitas tinggi", "Integrasi audio-video", "Mudah diakses tanpa perangkat elektronik", "Berbasis avatar", "Adaptif otomatis"], a: 2 },
+            { q: "Salah satu keterbatasan media audiovisual adalah …", options: ["Tidak menarik", "Terlalu banyak teks", "Anak menjadi pasif", "Tidak membutuhkan perangkat", "Tidak bisa digunakan berulang"], a: 2 },
+            { q: "Storytelling efektif dalam pembelajaran Bahasa Arab karena …", options: ["Menghilangkan konteks", "Menyampaikan materi secara naratif dan kontekstual", "Mengurangi interaksi", "Fokus pada teori abstrak", "Menghindari visualisasi"], a: 1 },
+            { q: "Platform seperti Duolingo memiliki kelebihan berupa …", options: ["Tidak membutuhkan internet", "Tidak menggunakan gambar", "Fleksibel dan memiliki pelacakan progres", "Hanya berbasis teks", "Tanpa gamifikasi"], a: 2 },
+            { q: "Untuk mengajarkan kosakata hewan dengan objek 3D yang muncul di atas kartu, media yang paling tepat adalah …", options: ["Buku teks", "Flashcard cetak", "Augmented Reality", "Worksheet", "Infografis"], a: 2 },
+            { q: "Jika guru ingin meningkatkan pelafalan siswa, media yang paling tepat digunakan adalah …", options: ["Poster alfabet", "Video animasi atau lagu Arab", "Buku latihan tertulis", "Infografis tata bahasa", "Lembar kerja"], a: 1 },
+            { q: "Untuk anak dengan Autism Spectrum Disorder (ASD), media yang relevan adalah …", options: ["Buku teks konvensional", "Infografis nahwu", "Aplikasi berbasis avatar seperti MOLHEM", "Poster statis", "Tabel konjugasi"], a: 2 },
+            { q: "Jika guru ingin mengajarkan nahwu secara terstruktur dengan bantuan teknologi, pilihan tepat adalah …", options: ["LED Matrix", "Media nahwu berbasis Android", "Lagu anak", "Flashcard", "Poster alfabet"], a: 1 },
+            { q: "Sebuah aplikasi sangat menarik secara visual tetapi anak lebih fokus bermain daripada belajar. Masalah utama desain tersebut adalah …", options: ["Kurang teknologi", "Tidak ada audio", "Ketidakseimbangan antara permainan dan substansi materi", "Kurang warna", "Terlalu sederhana"], a: 2 },
+            { q: "Media cetak kurang efektif untuk pembelajaran pelafalan karena …", options: ["Tidak memiliki warna", "Tidak interaktif", "Tidak menyediakan unsur audio", "Tidak dapat digunakan berulang", "Terlalu mahal"], a: 2 },
+            { q: "AR memiliki potensi besar dalam pembelajaran kosakata, tetapi keterbatasan utamanya adalah …", options: ["Tidak menarik", "Tidak visual", "Biaya dan kebutuhan perangkat", "Tidak dapat digunakan di sekolah", "Tidak sesuai anak"], a: 2 },
+            { q: "Platform e-learning umum terkadang kurang cocok untuk anak usia dini karena …", options: ["Terlalu konkret", "Terlalu sederhana", "Tidak selalu dirancang khusus sesuai karakteristik anak", "Tidak memiliki fitur progres", "Tidak menggunakan internet"], a: 2 },
+            { q: "Jika tujuan pembelajaran adalah meningkatkan keterampilan membaca dan menulis dasar, media yang paling efektif adalah …", options: ["AR", "Buku teks dan worksheet", "Lagu Arab", "Video animasi", "Chatbot"], a: 1 },
+            { q: "Untuk pembelajaran kosakata konkret pada anak usia dini dengan motivasi tinggi, kombinasi media terbaik adalah …", options: ["Buku teks saja", "AR + lagu Arab", "Poster saja", "Infografis nahwu", "Tabel konjugasi"], a: 1 },
+            { q: "Dalam konteks keterbatasan infrastruktur sekolah, media yang paling realistis dan efektif digunakan adalah …", options: ["AR berbiaya tinggi", "Chatbot berbasis AI", "Media cetak dan audiovisual sederhana", "Sistem multimedia kompleks", "LED Matrix canggih"], a: 2 },
+            { q: "Secara komprehensif, pemilihan media pembelajaran Bahasa Arab yang ideal harus mempertimbangkan …", options: ["Tingkat kecanggihan teknologi saja", "Estetika visual semata", "Usia anak, tujuan pembelajaran, dan ketersediaan sarana", "Tren aplikasi terbaru", "Popularitas platform"], a: 2 }
+        ];
+
+        // RENDER SOAL
+        const renderQuiz = () => {
+            const container = document.getElementById('questions-container');
+            let html = '';
+
+            quizData.forEach((item, index) => {
+                let optionsHtml = '';
+                item.options.forEach((opt, optIndex) => {
+                    optionsHtml += `
+                        <div class="relative">
+                            <input type="radio" name="q${index}" value="${optIndex}" id="q${index}_${optIndex}" class="option-input peer sr-only" onchange="window.updateProgress()">
+                            <label for="q${index}_${optIndex}" class="option-label flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2">
+                                <div class="circle-check w-5 h-5 border-2 border-gray-300 rounded-full mr-3 flex-shrink-0 transition-colors"></div>
+                                <span class="text-sm font-medium text-gray-700">${opt}</span>
+                            </label>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    <div class="glass-panel p-6 rounded-2xl animate-fade-in-up" style="animation-delay: ${index * 0.05}s">
+                        <div class="flex items-start gap-3 mb-4">
+                            <span class="bg-orange-100 text-orange-600 font-bold px-2 py-1 rounded text-xs">No. ${index + 1}</span>
+                            <p class="font-bold text-gray-800 text-base">${item.q}</p>
+                        </div>
+                        <div class="space-y-3">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        };
+
+        // START
+        window.startQuiz = () => {
+            document.getElementById('start-panel').classList.add('hidden');
+            document.getElementById('quiz-form').classList.remove('hidden');
+            document.getElementById('timer-display').classList.remove('hidden');
+            document.getElementById('timer-display').scrollIntoView({ behavior: 'smooth' });
+
+            quizInterval = setInterval(() => {
+                timeRemaining--;
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                document.getElementById('time-left').innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeRemaining <= 300) document.getElementById('timer-display').classList.add('timer-warning');
+                if (timeRemaining <= 0) {
+                    clearInterval(quizInterval);
+                    Swal.fire({ title: 'Waktu Habis!', text: 'Dikirim otomatis.', icon: 'info', timer: 2000, showConfirmButton: false }).then(() => window.submitQuiz());
+                }
+            }, 1000);
+        };
+
+        window.updateProgress = () => {
+            const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+            document.getElementById('answered-count').innerText = answered;
+        };
+
+        // SUBMIT
+        window.submitQuiz = async () => {
+            if(quizInterval) clearInterval(quizInterval);
+            const btn = document.getElementById('btn-submit');
+            const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+            
+            if (timeRemaining > 0 && answered < quizData.length) {
+                Swal.fire({
+                    title: 'Belum Selesai',
+                    text: `Baru menjawab ${answered}/${quizData.length}. Yakin kirim?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Kirim',
+                    cancelButtonText: 'Lanjut'
+                }).then((result) => {
+                    if (result.isConfirmed) processScore();
+                    else {
+                        quizInterval = setInterval(() => {
+                            timeRemaining--;
+                        }, 1000);
+                    }
+                });
+                return;
+            }
+            processScore();
+        };
+
+        const processScore = async () => {
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Menilai...';
+
+            let correct = 0;
+            quizData.forEach((item, index) => {
+                const selectedEl = document.querySelector(`input[name="q${index}"]:checked`);
+                if (selectedEl && parseInt(selectedEl.value) === item.a) correct++;
+            });
+
+            const score = Math.round((correct / quizData.length) * 100);
+
+            try {
+                if (currentUser) {
+                    const userRef = doc(db, "users", currentUser.uid);
+                    await updateDoc(userRef, { "scores.3": score }); // Save to score 3
+
+                    if (score >= 80) {
+                        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+                        await Swal.fire({
+                            title: 'Luar Biasa!',
+                            html: `Nilai: <span class="text-5xl font-bold text-green-600 block my-4">${score}</span>Materi selanjutnya terbuka!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ke Dashboard',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                    } else {
+                        await Swal.fire({
+                            title: 'Belum Lulus',
+                            html: `Nilai: <span class="text-5xl font-bold text-red-500 block my-4">${score}</span>Butuh 80 untuk lulus.`,
+                            icon: 'error',
+                            confirmButtonText: 'Coba Lagi',
+                            confirmButtonColor: '#f59e0b'
+                        });
+                    }
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+                btn.disabled = false;
+                btn.innerText = 'Kirim Jawaban';
+            }
+        };
+
+        // INIT
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const docSnap = await getDoc(doc(db, "users", user.uid));
+                if (docSnap.exists()) {
+                    document.getElementById('user-name').innerText = docSnap.data().name;
+                }
+                renderQuiz();
+            } else {
+                Swal.fire({
+                    title: 'Sesi Tidak Ditemukan',
+                    text: 'Silakan login kembali.',
+                    icon: 'warning',
+                    confirmButtonText: 'Login',
+                    allowOutsideClick: false
+                }).then(() => { window.location.href = 'index.html'; });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desain Pengembangan Media Ajar Bahasa Arab untuk Anak</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- SweetAlert2 for beautiful alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        display: ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#818cf8',
+                            DEFAULT: '#4f46e5',
+                            dark: '#3730a3',
+                        },
+                        game: {
+                            yellow: '#fbbf24',
+                            orange: '#f59e0b',
+                            green: '#10b981',
+                            red: '#ef4444',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-image: url("https://img.freepik.com/free-vector/hand-drawn-education-pattern-background_23-2149453715.jpg?w=1380&t=st=1709123456~exp=1709124056~hmac=abcdef");
+            background-color: #f3f4f6;
+            background-blend-mode: overlay;
+            background-attachment: fixed;
+            background-size: cover;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .glass-dark {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Animations */
+        .hover-lift { transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .hover-lift:hover { transform: translateY(-5px); }
+        
+        .locked-grayscale { filter: grayscale(100%); opacity: 0.7; pointer-events: none; }
+        
+        .progress-bar-striped {
+            background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+        @keyframes progress-bar-stripes { 0% { background-position: 1rem 0; } 100% { background-position: 0 0; } }
+
+        /* Scrollbar untuk Admin Table */
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+    </style>
+</head>
+<body class="antialiased text-gray-800 min-h-screen flex flex-col">
+
+    <!-- NAVBAR -->
+    <nav class="sticky top-0 z-50 glass-panel border-b border-white/40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-auto md:h-20 items-center py-2 md:py-0">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.reload()">
+                    <div class="bg-brand text-white p-2 rounded-xl shadow-lg transform -rotate-3 hover:rotate-0 transition shrink-0">
+                        <i class="fa-solid fa-shapes text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-display font-bold text-lg md:text-xl text-brand-dark leading-tight">Desain Pengembangan Media Ajar <br class="hidden md:block"><span class="text-game-orange">Bahasa Arab untuk Anak</span></h1>
+                    </div>
+                </div>
+
+                <!-- Profile / Logout -->
+                <div id="nav-actions" class="hidden flex items-center gap-4">
+                    <div class="hidden md:flex flex-col items-end mr-2">
+                        <span id="nav-name" class="font-bold text-sm text-gray-800">Mahasiswa</span>
+                        <div class="flex items-center gap-1 text-xs text-brand font-semibold bg-brand-light/20 px-2 py-0.5 rounded-full">
+                            <i class="fa-solid fa-star text-game-yellow"></i> <span id="nav-score">0</span> XP
+                        </div>
+                    </div>
+                    <button onclick="app.logout()" class="bg-red-50 hover:bg-red-100 text-red-500 p-2.5 rounded-xl transition border border-red-200" title="Logout">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main id="app" class="flex-grow w-full max-w-7xl mx-auto p-4 md:p-6 pb-20">
+        
+        <!-- LOADING -->
+        <div id="loading" class="fixed inset-0 bg-white/80 z-[60] flex flex-col items-center justify-center backdrop-blur-sm">
+            <i class="fa-solid fa-circle-notch fa-spin text-5xl text-brand mb-4"></i>
+            <p class="font-display font-bold text-gray-600 animate-pulse">Menyiapkan Arena Belajar...</p>
+        </div>
+
+        <!-- AUTH PAGE -->
+        <div id="view-auth" class="hidden min-h-[80vh] flex items-center justify-center">
+            <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-0 shadow-2xl rounded-3xl overflow-hidden glass-panel">
+                <!-- Left: Illustration -->
+                <div class="bg-brand p-10 text-white flex flex-col justify-center relative overflow-hidden">
+                    <div class="absolute -top-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                    <div class="absolute bottom-10 right-10 w-60 h-60 bg-game-orange/20 rounded-full blur-3xl"></div>
+                    
+                    <h2 class="font-display font-bold text-3xl md:text-4xl mb-4 relative z-10 leading-tight">Desain Pengembangan Media Ajar Bahasa Arab untuk Anak</h2>
+                    <p class="text-indigo-100 mb-8 relative z-10">Selamat datang di portal pembelajaran interaktif. Silakan masuk untuk mengakses materi perkuliahan.</p>
+                </div>
+
+                <!-- Right: Forms -->
+                <div class="p-10 bg-white/50 backdrop-blur-md">
+                    <!-- Toggle -->
+                    <div class="flex bg-gray-100 p-1 rounded-xl mb-6">
+                        <button onclick="app.toggleAuth('login')" id="btn-tab-login" class="flex-1 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-brand transition">Masuk</button>
+                        <button onclick="app.toggleAuth('register')" id="btn-tab-register" class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-400 hover:text-gray-600 transition">Daftar</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="form-login" onsubmit="event.preventDefault(); app.login();" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">EMAIL</label>
+                            <input type="email" id="login-email" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition" placeholder="email@mahasiswa.ac.id" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">PASSWORD</label>
+                            <input type="password" id="login-pass" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition" placeholder="******" required>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl shadow-lg shadow-brand/30 transition transform active:scale-95">Mulai Belajar</button>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="form-register" onsubmit="event.preventDefault(); app.register();" class="hidden space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">NAMA LENGKAP</label>
+                                <input type="text" id="reg-name" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none text-sm" placeholder="Nama" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">NIM</label>
+                                <input type="text" id="reg-nim" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none text-sm" placeholder="NIM" required>
+                            </div>
+                        </div>
+                        <!-- Added Class Field -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">KELAS</label>
+                            <input type="text" id="reg-class" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none text-sm" placeholder="Contoh: 5A" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">EMAIL</label>
+                            <input type="email" id="reg-email" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none text-sm" placeholder="Email" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">PASSWORD</label>
+                            <input type="password" id="reg-pass" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none text-sm" placeholder="Password (Min. 6 Karakter)" required>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-game-orange hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/30 transition transform active:scale-95">Buat Akun Baru</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD (MAHASISWA) -->
+        <div id="view-dashboard" class="hidden animate-fade-in-up">
+            
+            <!-- Welcome Banner -->
+            <div class="mb-8 p-6 rounded-3xl bg-gradient-to-r from-brand to-purple-600 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute right-0 top-0 h-full w-1/2 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+                <div class="relative z-10">
+                    <h2 class="font-display font-bold text-2xl md:text-3xl mb-1">Ahlan wa Sahlan, <span id="dash-name" class="text-game-yellow">Student</span>!</h2>
+                    <p class="text-indigo-100 text-sm max-w-lg mb-2">Desain Pengembangan Media Ajar Bahasa Arab untuk Anak</p>
+                    <p class="text-xs bg-white/20 inline-block px-3 py-1 rounded-full font-bold">Kelas: <span id="dash-class">-</span></p>
+                </div>
+            </div>
+
+            <!-- LEADERBOARD SECTION -->
+            <div class="mb-10">
+                <div class="flex items-center justify-between mb-4 px-2">
+                    <h3 class="font-display font-bold text-xl text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-game-yellow"></i> Papan Peringkat Kelas
+                    </h3>
+                    <button onclick="app.loadLeaderboard()" class="text-xs font-bold text-brand bg-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-gray-50 transition">
+                        <i class="fa-solid fa-rotate"></i> Refresh
+                    </button>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-1 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-brand/5 border-b border-brand/10 text-xs uppercase text-gray-500 font-bold tracking-wider">
+                                    <th class="p-3 text-center w-12">#</th>
+                                    <th class="p-3">Mahasiswa</th>
+                                    <th class="p-3 text-center">Kelas</th>
+                                    <th class="p-3 text-center">Progress</th>
+                                    <th class="p-3 text-right">Total XP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body" class="text-sm font-semibold text-gray-700">
+                                <tr><td colspan="5" class="p-4 text-center text-gray-400">Memuat peringkat...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-brand/10 p-3 mt-1 rounded-xl flex justify-between items-center text-sm font-bold text-brand-dark">
+                        <span>Peringkat Anda:</span>
+                        <span id="my-rank-display"># -</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MATERI GRID -->
+            <div>
+                <h3 class="font-display font-bold text-xl text-gray-800 mb-6 px-2 border-l-4 border-game-orange pl-3">
+                    Peta Pembelajaran (13 Level)
+                </h3>
+                <div id="material-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards injected by JS -->
+                </div>
+            </div>
+
+            <!-- DEVELOPER PROFILE SECTION -->
+            <div class="mt-12 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-6 animate-fade-in-up">
+                <div class="bg-brand/10 w-20 h-20 rounded-full flex items-center justify-center text-brand text-3xl shrink-0">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+                <div class="text-center md:text-left flex-1">
+                    <h3 class="text-gray-500 font-bold text-xs uppercase tracking-widest mb-1">Pengembang Media</h3>
+                    <h2 class="font-display font-bold text-xl text-gray-800">Muhammad Nur Kholis, M.Pd.I</h2>
+                    <p class="text-gray-500 text-sm font-semibold">UIN Raden Mas Said Surakarta</p>
+                </div>
+                <a href="https://scholar.google.com/citations?user=rgVVmysAAAAJ&hl=en" target="_blank" class="bg-white border border-gray-200 hover:border-brand text-gray-600 hover:text-brand px-5 py-2.5 rounded-xl font-bold text-sm transition shadow-sm flex items-center gap-2 hover:bg-brand/5">
+                    <i class="fa-solid fa-graduation-cap"></i> Google Scholar
+                </a>
+            </div>
+        </div>
+
+        <!-- ADMIN DASHBOARD -->
+        <div id="view-admin" class="hidden animate-fade-in-up space-y-6 w-full">
+            <!-- Header Panel Admin -->
+            <div class="glass-dark p-6 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="font-display font-bold text-2xl">Panel Admin Dosen</h2>
+                    <p class="text-gray-300 text-sm">Monitoring Aktivitas Mahasiswa Real-time</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="app.exportCSV()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-file-csv"></i> Download CSV
+                    </button>
+                    <button onclick="app.logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-right-from-bracket"></i> Keluar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Table Container -->
+            <div class="glass-panel rounded-2xl p-6 overflow-hidden">
+                <!-- Toolbar -->
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                    <div class="relative w-full md:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                        <input type="text" id="admin-search" onkeyup="app.filterAdminTable()" placeholder="Cari Nama/NIM..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-brand">
+                    </div>
+                    <div id="batch-actions" class="hidden">
+                        <button onclick="app.deleteSelected()" class="bg-red-100 text-red-600 hover:bg-red-200 px-4 py-2 rounded-lg font-bold text-sm transition">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Hapus Terpilih
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar pb-2">
+                    <table class="w-full text-sm border-collapse min-w-[900px]">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-xs border-b border-gray-200">
+                                <th class="p-3 text-center w-10">
+                                    <input type="checkbox" id="check-all" onchange="app.toggleSelectAll(this)" class="rounded border-gray-300 text-brand focus:ring-brand">
+                                </th>
+                                <th class="p-3 text-left w-64">Nama & Info</th>
+                                <th class="p-3 text-center w-32">Progres Global</th>
+                                <th class="p-3 text-center w-32">Statistik Akses</th>
+                                <th class="p-3 text-left w-80">Detail Nilai Materi</th>
+                                <th class="p-3 text-center w-20">Rata-Rata</th>
+                                <th class="p-3 text-center w-20">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body" class="divide-y divide-gray-100">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-2 text-xs text-gray-400 italic text-right">
+                    *M = Materi. Klik 'Kelola' untuk opsi Reset atau Hapus.
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="font-display font-bold text-gray-400 text-sm">© 2024 Desain Pengembangan Media Ajar Bahasa Arab untuk Anak.</p>
+        </div>
+    </footer>
+
+    <!-- FIREBASE LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // CONFIG BARU
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-jHdi3VVu9F5i6tLIjGJCcVFfHBieqbI",
+            authDomain: "desain-mediapba-anak.firebaseapp.com",
+            projectId: "desain-mediapba-anak",
+            storageBucket: "desain-mediapba-anak.firebasestorage.app",
+            messagingSenderId: "118347735703",
+            appId: "1:118347735703:web:bafeb4590ddbe85f7c7fd2",
+            measurementId: "G-RN0S3X8V27"
+        };
+
+        const firebaseApp = initializeApp(firebaseConfig);
+        const auth = getAuth(firebaseApp);
+        const db = getFirestore(firebaseApp);
+
+        // DATA MATERI (13 ITEM)
+        const materials = [
+            { id: 1, title: "Pendahuluan & Konsep Dasar", desc: "Media Ajar Bahasa Arab untuk Anak", icon: "fa-solid fa-shapes", color: "text-blue-500", bg: "bg-blue-100" },
+            { id: 2, title: "Prinsip Desain", desc: "Prinsip Media yang Sesuai untuk Anak", icon: "fa-solid fa-compass-drafting", color: "text-emerald-500", bg: "bg-emerald-100" },
+            { id: 3, title: "Karakteristik Anak", desc: "Implikasi pada Desain Media", icon: "fa-solid fa-child-reaching", color: "text-orange-500", bg: "bg-orange-100" },
+            { id: 4, title: "Jenis-jenis Media", desc: "Cetak, Digital, AV, Interaktif", icon: "fa-solid fa-layer-group", color: "text-purple-500", bg: "bg-purple-100" },
+            { id: 5, title: "Teori Pengembangan", desc: "ADDIE, ASSURE, dan Lainnya", icon: "fa-solid fa-book-open-reader", color: "text-pink-500", bg: "bg-pink-100" },
+            { id: 6, title: "Pemanfaatan Teknologi", desc: "Teknologi dalam Pengembangan Media", icon: "fa-solid fa-laptop-code", color: "text-cyan-500", bg: "bg-cyan-100" },
+            { id: 7, title: "Evaluasi Media", desc: "Kriteria dan Teknik Penilaian", icon: "fa-solid fa-clipboard-check", color: "text-teal-500", bg: "bg-teal-100" },
+            { id: 8, title: "Tren & Inovasi", desc: "Media Pembelajaran di Era Digital", icon: "fa-solid fa-rocket", color: "text-indigo-500", bg: "bg-indigo-100" },
+            { id: 9, title: "Tren Media Bahasa Asing", desc: "Digitalisasi dan Interaktivitas", icon: "fa-solid fa-earth-asia", color: "text-rose-500", bg: "bg-rose-100" },
+            { id: 10, title: "Perancangan Media", desc: "Perencanaan & Penyusunan Konten", icon: "fa-solid fa-pencil-ruler", color: "text-yellow-600", bg: "bg-yellow-100" },
+            { id: 11, title: "Media Cetak Interaktif", desc: "Buku Cerita, Kartu, Poster", icon: "fa-solid fa-print", color: "text-gray-600", bg: "bg-gray-200" },
+            { id: 12, title: "Pengembangan Digital", desc: "Game Edukasi & Animasi", icon: "fa-solid fa-gamepad", color: "text-fuchsia-500", bg: "bg-fuchsia-100" },
+            { id: 13, title: "Produksi Audiovisual", desc: "Video, Lagu & Integrasi Medsos", icon: "fa-solid fa-video", color: "text-red-500", bg: "bg-red-100" }
+        ];
+
+        const app = {
+            currentUser: null,
+            adminData: [], // Store data for filtering
+
+            init: function() {
+                onAuthStateChanged(auth, async (user) => {
+                    document.getElementById('loading').classList.add('hidden');
+                    
+                    if (user) {
+                        // Cek Admin
+                        if(user.email === 'admin@uin.ac.id') {
+                            this.currentUser = { uid: user.uid, email: user.email, role: 'admin' };
+                            this.renderAdmin();
+                            return;
+                        }
+
+                        // User Biasa: Track Access
+                        const userRef = doc(db, "users", user.uid);
+                        const docSnap = await getDoc(userRef);
+                        
+                        if (docSnap.exists()) {
+                            // Logic Update Statistik Akses
+                            const data = docSnap.data();
+                            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                            const newTotal = (data.totalAccess || 0) + 1;
+                            
+                            await updateDoc(userRef, {
+                                totalAccess: newTotal,
+                                lastAccess: today
+                            });
+
+                            // Gabungkan data lokal
+                            this.currentUser = { 
+                                uid: user.uid, 
+                                ...data, 
+                                totalAccess: newTotal 
+                            };
+                            this.renderDashboard();
+                        } else {
+                            this.logout();
+                        }
+                    } else {
+                        this.showView('view-auth');
+                    }
+                });
+            },
+
+            // --- AUTH LOGIC ---
+            toggleAuth: (mode) => {
+                if(mode === 'login') {
+                    document.getElementById('form-login').classList.remove('hidden');
+                    document.getElementById('form-register').classList.add('hidden');
+                    document.getElementById('btn-tab-login').classList.add('bg-white', 'shadow-sm', 'text-brand');
+                    document.getElementById('btn-tab-login').classList.remove('text-gray-400');
+                    document.getElementById('btn-tab-register').classList.remove('bg-white', 'shadow-sm', 'text-brand');
+                    document.getElementById('btn-tab-register').classList.add('text-gray-400');
+                } else {
+                    document.getElementById('form-login').classList.add('hidden');
+                    document.getElementById('form-register').classList.remove('hidden');
+                    document.getElementById('btn-tab-register').classList.add('bg-white', 'shadow-sm', 'text-brand');
+                    document.getElementById('btn-tab-register').classList.remove('text-gray-400');
+                    document.getElementById('btn-tab-login').classList.remove('bg-white', 'shadow-sm', 'text-brand');
+                    document.getElementById('btn-tab-login').classList.add('text-gray-400');
+                }
+            },
+
+            login: async function() {
+                const email = document.getElementById('login-email').value;
+                const pass = document.getElementById('login-pass').value;
+                try {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                } catch(e) {
+                    Swal.fire('Error', 'Email atau password salah', 'error');
+                }
+            },
+
+            register: async function() {
+                const name = document.getElementById('reg-name').value;
+                const nim = document.getElementById('reg-nim').value;
+                const kelas = document.getElementById('reg-class').value;
+                const email = document.getElementById('reg-email').value;
+                const pass = document.getElementById('reg-pass').value;
+
+                try {
+                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                    // Initialize stats data
+                    await setDoc(doc(db, "users", cred.user.uid), {
+                        name: name,
+                        nim: nim,
+                        kelas: kelas,
+                        email: email,
+                        scores: {}, 
+                        role: 'student',
+                        totalXP: 0,
+                        totalAccess: 1, 
+                        lastAccess: new Date().toISOString().split('T')[0]
+                    });
+                    Swal.fire('Sukses', 'Akun berhasil dibuat!', 'success');
+                } catch(e) {
+                    Swal.fire('Error', e.message, 'error');
+                }
+            },
+
+            logout: () => signOut(auth).then(() => window.location.reload()),
+
+            // --- DASHBOARD MAHASISWA ---
+            renderDashboard: function() {
+                this.showView('view-dashboard');
+                document.getElementById('nav-actions').classList.remove('hidden');
+                
+                document.getElementById('nav-name').innerText = this.currentUser.name;
+                document.getElementById('dash-name').innerText = this.currentUser.name;
+                document.getElementById('dash-class').innerText = this.currentUser.kelas || '-';
+                
+                const scores = this.currentUser.scores || {};
+                let totalXP = 0;
+                let gridHtml = '';
+
+                materials.forEach((m, index) => {
+                    const score = scores[m.id] || 0;
+                    totalXP += score;
+
+                    let isLocked = false;
+                    if (index > 0) {
+                        const prevScore = scores[materials[index-1].id] || 0;
+                        if (prevScore < 80) isLocked = true;
+                    }
+
+                    let statusBadge = '';
+                    if (!isLocked) {
+                        if (score >= 80) statusBadge = `<span class="absolute top-3 right-3 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">SELESAI (${score})</span>`;
+                        else if (score > 0) statusBadge = `<span class="absolute top-3 right-3 bg-yellow-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">BELUM LULUS (${score})</span>`;
+                        else statusBadge = `<span class="absolute top-3 right-3 bg-gray-400 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">BARU</span>`;
+                    }
+
+                    let btnAction = '';
+                    if (isLocked) {
+                        btnAction = `<button disabled class="w-full mt-4 py-2 bg-gray-100 text-gray-400 text-xs font-bold rounded-lg cursor-not-allowed"><i class="fa-solid fa-lock"></i> Terkunci</button>`;
+                    } else {
+                        btnAction = `<button onclick="window.location.href='materi${m.id}.html'" class="w-full mt-4 py-2 bg-brand text-white text-xs font-bold rounded-lg hover:bg-brand-dark transition shadow-md hover:shadow-lg">Buka Materi</button>`;
+                    }
+
+                    gridHtml += `
+                        <div class="glass-panel p-5 rounded-2xl relative ${isLocked ? 'locked-grayscale' : 'hover-lift group'} transition-all duration-300">
+                            ${statusBadge}
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-xl flex items-center justify-center ${m.bg} ${m.color} text-xl shadow-inner">
+                                    <i class="${m.icon}"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 leading-tight mb-1 group-hover:text-brand transition">${m.id}. ${m.title}</h4>
+                                    <p class="text-xs text-gray-500 line-clamp-2">${m.desc}</p>
+                                </div>
+                            </div>
+                            ${btnAction}
+                        </div>
+                    `;
+                });
+
+                document.getElementById('nav-score').innerText = totalXP;
+                document.getElementById('material-grid').innerHTML = gridHtml;
+                this.loadLeaderboard();
+            },
+
+            loadLeaderboard: async function() {
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400"><i class="fa-solid fa-circle-notch fa-spin"></i> Memuat data...</td></tr>`;
+
+                try {
+                    const querySnapshot = await getDocs(collection(db, "users"));
+                    let users = [];
+                    querySnapshot.forEach(doc => {
+                        const d = doc.data();
+                        if (d.role !== 'admin') {
+                            let xp = 0;
+                            let completed = 0;
+                            if(d.scores) {
+                                Object.values(d.scores).forEach(s => {
+                                    xp += s;
+                                    if(s >= 80) completed++;
+                                });
+                            }
+                            users.push({ ...d, xp, completed });
+                        }
+                    });
+                    users.sort((a, b) => b.xp - a.xp);
+
+                    let html = '';
+                    let myRank = '-';
+
+                    users.forEach((u, i) => {
+                        const rank = i + 1;
+                        if(u.email === this.currentUser.email) myRank = rank;
+                        let medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `<span class="text-gray-400 font-bold text-xs">#${rank}</span>`;
+                        const isMe = u.email === this.currentUser.email ? 'bg-brand/10 border-brand/20' : 'hover:bg-gray-50 border-gray-100';
+
+                        html += `
+                            <tr class="border-b ${isMe} transition">
+                                <td class="p-3 text-center text-lg">${medal}</td>
+                                <td class="p-3">
+                                    <div class="font-bold text-gray-800 text-sm">${u.name} ${u.email === this.currentUser.email ? '(Saya)' : ''}</div>
+                                    <div class="text-[10px] text-gray-400">${u.nim}</div>
+                                </td>
+                                <td class="p-3 text-center">
+                                    <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">${u.kelas || '-'}</span>
+                                </td>
+                                <td class="p-3 text-center">
+                                    <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">${u.completed}/13</span>
+                                </td>
+                                <td class="p-3 text-right font-bold text-brand text-sm">${u.xp} XP</td>
+                            </tr>
+                        `;
+                    });
+
+                    tbody.innerHTML = html || `<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada data.</td></tr>`;
+                    document.getElementById('my-rank-display').innerText = `# ${myRank}`;
+                } catch(e) {
+                    console.error(e);
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400">Gagal memuat leaderboard.</td></tr>`;
+                }
+            },
+
+            // --- ADMIN LOGIC ---
+            renderAdmin: async function() {
+                this.showView('view-admin');
+                const snap = await getDocs(collection(db, "users"));
+                this.adminData = [];
+
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if(d.role !== 'admin') {
+                        this.adminData.push({ id: doc.id, ...d });
+                    }
+                });
+
+                this.renderAdminTable(this.adminData);
+            },
+
+            renderAdminTable: function(data) {
+                const tbody = document.getElementById('admin-table-body');
+                let html = '';
+
+                data.forEach(d => {
+                    let totalScore = 0;
+                    let completed = 0;
+                    const scores = d.scores || {};
+                    Object.values(scores).forEach(s => {
+                        totalScore += s;
+                        if(s >= 80) completed++;
+                    });
+                    const avg = Object.keys(scores).length ? (totalScore / Object.keys(scores).length).toFixed(1) : '0';
+                    const percent = Math.round((completed / 13) * 100);
+                    const accessCount = d.totalAccess || 0;
+
+                    // Detail Scores
+                    let detailsHtml = '<div class="grid grid-cols-4 gap-1 text-[10px]">';
+                    materials.forEach(m => {
+                        const sc = scores[m.id];
+                        const val = sc !== undefined ? sc : '-';
+                        const colorClass = sc >= 80 ? 'text-green-600 font-bold' : (sc !== undefined ? 'text-red-500' : 'text-gray-300');
+                        detailsHtml += `<span class="${colorClass}">M${m.id}:${val}</span>`;
+                    });
+                    detailsHtml += '</div>';
+
+                    html += `
+                        <tr class="bg-white hover:bg-gray-50 border-b border-gray-100 transition">
+                            <td class="p-3 text-center">
+                                <input type="checkbox" class="row-checkbox rounded border-gray-300 text-brand focus:ring-brand" value="${d.id}" onchange="app.checkSelection()">
+                            </td>
+                            <td class="p-3 align-top">
+                                <div class="font-bold text-gray-800">${d.name}</div>
+                                <div class="text-xs text-gray-500">${d.nim}</div>
+                                <div class="text-[10px] bg-blue-50 text-blue-600 inline-block px-1.5 py-0.5 rounded mt-1 font-bold">Kelas: ${d.kelas || '-'}</div>
+                            </td>
+                            <td class="p-3 text-center align-top">
+                                <div class="font-bold text-sm text-brand mb-1">${completed}/13</div>
+                                <div class="w-full bg-gray-100 rounded-full h-1.5">
+                                    <div class="h-full bg-brand rounded-full" style="width: ${percent}%"></div>
+                                </div>
+                            </td>
+                            <td class="p-3 text-center align-top">
+                                <div class="font-bold text-gray-700 text-sm">Total: ${accessCount}x</div>
+                            </td>
+                            <td class="p-3 align-top">
+                                ${detailsHtml}
+                            </td>
+                            <td class="p-3 text-center align-top font-bold text-gray-800 text-lg">
+                                ${avg}
+                            </td>
+                            <td class="p-3 text-center align-top">
+                                <button onclick="app.confirmDeleteUser('${d.id}', '${d.name}')" class="text-blue-500 hover:text-blue-700 text-xs font-bold border border-blue-200 hover:bg-blue-50 px-3 py-1.5 rounded transition">
+                                    <i class="fa-solid fa-gear"></i> Kelola
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html || `<tr><td colspan="7" class="p-8 text-center text-gray-400">Tidak ada data ditemukan.</td></tr>`;
+            },
+
+            filterAdminTable: function() {
+                const query = document.getElementById('admin-search').value.toLowerCase();
+                const filtered = this.adminData.filter(d => 
+                    d.name.toLowerCase().includes(query) || 
+                    d.nim.toLowerCase().includes(query) ||
+                    (d.kelas && d.kelas.toLowerCase().includes(query))
+                );
+                this.renderAdminTable(filtered);
+            },
+
+            // Checkbox Logic
+            toggleSelectAll: function(source) {
+                const checkboxes = document.querySelectorAll('.row-checkbox');
+                checkboxes.forEach(cb => cb.checked = source.checked);
+                this.checkSelection();
+            },
+
+            checkSelection: function() {
+                const count = document.querySelectorAll('.row-checkbox:checked').length;
+                const batchActions = document.getElementById('batch-actions');
+                if (count > 0) batchActions.classList.remove('hidden');
+                else batchActions.classList.add('hidden');
+            },
+
+            deleteSelected: async function() {
+                const selected = document.querySelectorAll('.row-checkbox:checked');
+                if(selected.length === 0) return;
+                
+                if(confirm(`Yakin hapus ${selected.length} data terpilih secara permanen?`)) {
+                    for (const cb of selected) {
+                        await deleteDoc(doc(db, "users", cb.value));
+                    }
+                    Swal.fire('Terhapus', 'Data terpilih berhasil dihapus', 'success');
+                    this.renderAdmin();
+                    document.getElementById('check-all').checked = false;
+                    document.getElementById('batch-actions').classList.add('hidden');
+                }
+            },
+
+            // NEW: CONFIRM DELETE USER (POPUP WITH 2 OPTIONS)
+            confirmDeleteUser: async (uid, name) => {
+                const result = await Swal.fire({
+                    title: 'Kelola Data Mahasiswa',
+                    html: `Pilih tindakan untuk mahasiswa: <b>${name}</b>`, 
+                    icon: 'question',
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonColor: '#d33', 
+                    denyButtonColor: '#f59e0b',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: '<i class="fa-solid fa-trash"></i> Hapus Akun',
+                    denyButtonText: '<i class="fa-solid fa-eraser"></i> Reset Nilai',
+                    cancelButtonText: 'Batal'
+                });
+
+                if (result.isConfirmed) {
+                    // SweetAlert confirmation instead of native
+                    const secondCheck = await Swal.fire({
+                        title: 'Yakin Hapus Permanen?',
+                        text: "Data akun ini akan hilang selamanya dari database!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        confirmButtonText: 'Ya, Hapus!',
+                        cancelButtonText: 'Batal'
+                    });
+
+                    if (secondCheck.isConfirmed) {
+                        try {
+                            await deleteDoc(doc(db, "users", uid));
+                            Swal.fire('Terhapus!', 'Akun mahasiswa telah dihapus.', 'success');
+                            app.renderAdmin();
+                        } catch (error) {
+                            Swal.fire('Gagal!', 'Error: ' + error.message, 'error');
+                        }
+                    }
+                } else if (result.isDenied) {
+                    // Opsi: Hapus Hasil Pengerjaan (Reset Nilai)
+                    try {
+                        await updateDoc(doc(db, "users", uid), {
+                            scores: {},
+                            totalXP: 0
+                        });
+                        Swal.fire('Direset!', 'Hasil pengerjaan (nilai & skor) mahasiswa telah dihapus.', 'success');
+                        app.renderAdmin();
+                    } catch (error) {
+                         Swal.fire('Gagal!', 'Error: ' + error.message, 'error');
+                    }
+                }
+            },
+
+            // Download CSV
+            exportCSV: function() {
+                try {
+                    let csvContent = "Nama,NIM,Kelas,Email,Total Akses,Materi Selesai,Rata-rata Nilai,M1,M2,M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13\n";
+
+                    this.adminData.forEach(d => {
+                        let totalScore = 0;
+                        let completed = 0;
+                        const scores = d.scores || {};
+                        Object.values(scores).forEach(s => {
+                            totalScore += s;
+                            if(s >= 80) completed++;
+                        });
+                        const avg = Object.keys(scores).length ? (totalScore / Object.keys(scores).length).toFixed(1) : 0;
+                        
+                        // Detail scores for CSV
+                        let mScores = [];
+                        materials.forEach(m => mScores.push(scores[m.id] || 0));
+
+                        csvContent += `"${d.name}","${d.nim}","${d.kelas || '-'}","${d.email}","${d.totalAccess || 0}","${completed}/13","${avg}",${mScores.join(',')}\n`;
+                    });
+
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", "rekap_nilai_mahasiswa.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch(e) {
+                    Swal.fire('Error', 'Gagal export data', 'error');
+                }
+            },
+
+            // HELPERS
+            showView: (id) => {
+                ['view-auth', 'view-dashboard', 'view-admin'].forEach(v => document.getElementById(v).classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+            }
+        };
+
+        window.app = app;
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>
