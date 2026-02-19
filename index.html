@@ -81,9 +81,9 @@
         }
         @keyframes progress-bar-stripes { 0% { background-position: 1rem 0; } 100% { background-position: 0 0; } }
 
-        /* Scrollbar untuk Admin Table */
-        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        /* Scrollbar Custom (Dipakai di Admin Table & Leaderboard) */
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
     </style>
@@ -173,7 +173,6 @@
                                 <input type="text" id="reg-nim" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none text-sm" placeholder="NIM" required>
                             </div>
                         </div>
-                        <!-- Added Class Field -->
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">KELAS</label>
                             <input type="text" id="reg-class" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none text-sm" placeholder="Contoh: 5A" required>
@@ -205,7 +204,7 @@
                 </div>
             </div>
 
-            <!-- LEADERBOARD SECTION -->
+            <!-- LEADERBOARD SECTION (SCROLLABLE & COMPACT) -->
             <div class="mb-10">
                 <div class="flex items-center justify-between mb-4 px-2">
                     <h3 class="font-display font-bold text-xl text-gray-800 flex items-center gap-2">
@@ -217,10 +216,12 @@
                 </div>
 
                 <div class="glass-panel rounded-2xl p-1 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-brand/5 border-b border-brand/10 text-xs uppercase text-gray-500 font-bold tracking-wider">
+                    <!-- Added max-h-64 for height limit and overflow-y-auto for scroll -->
+                    <div class="overflow-y-auto max-h-64 custom-scrollbar">
+                        <table class="w-full text-left border-collapse relative">
+                            <!-- Sticky Header Added -->
+                            <thead class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm shadow-sm">
+                                <tr class="border-b border-brand/10 text-xs uppercase text-gray-500 font-bold tracking-wider">
                                     <th class="p-3 text-center w-12">#</th>
                                     <th class="p-3">Mahasiswa</th>
                                     <th class="p-3 text-center">Kelas</th>
@@ -233,7 +234,8 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="bg-brand/10 p-3 mt-1 rounded-xl flex justify-between items-center text-sm font-bold text-brand-dark">
+                    <!-- User Rank Footer -->
+                    <div class="bg-brand/10 p-3 mt-1 rounded-xl flex justify-between items-center text-sm font-bold text-brand-dark border-t border-brand/10">
                         <span>Peringkat Anda:</span>
                         <span id="my-rank-display"># -</span>
                     </div>
@@ -330,7 +332,7 @@
     <!-- FOOTER -->
     <footer class="bg-white border-t py-6 mt-auto">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="font-display font-bold text-gray-400 text-sm">© 2024 Desain Pengembangan Media Ajar Bahasa Arab untuk Anak.</p>
+            <p class="font-display font-bold text-gray-400 text-sm">© 2026 Desain Pengembangan Media Ajar Bahasa Arab untuk Anak.</p>
         </div>
     </footer>
 
