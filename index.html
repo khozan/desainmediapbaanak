@@ -216,10 +216,8 @@
                 </div>
 
                 <div class="glass-panel rounded-2xl p-1 overflow-hidden">
-                    <!-- Added max-h-64 for height limit and overflow-y-auto for scroll -->
                     <div class="overflow-y-auto max-h-64 custom-scrollbar">
                         <table class="w-full text-left border-collapse relative">
-                            <!-- Sticky Header Added -->
                             <thead class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm shadow-sm">
                                 <tr class="border-b border-brand/10 text-xs uppercase text-gray-500 font-bold tracking-wider">
                                     <th class="p-3 text-center w-12">#</th>
@@ -302,16 +300,16 @@
                 </div>
 
                 <div class="overflow-x-auto custom-scrollbar pb-2">
-                    <table class="w-full text-sm border-collapse min-w-[900px]">
+                    <table class="w-full text-sm border-collapse min-w-[1100px]">
                         <thead>
                             <tr class="bg-gray-100 text-gray-600 uppercase text-xs border-b border-gray-200">
                                 <th class="p-3 text-center w-10">
                                     <input type="checkbox" id="check-all" onchange="app.toggleSelectAll(this)" class="rounded border-gray-300 text-brand focus:ring-brand">
                                 </th>
-                                <th class="p-3 text-left w-64">Nama & Info</th>
+                                <th class="p-3 text-left w-56">Nama & Info</th>
                                 <th class="p-3 text-center w-32">Progres Global</th>
-                                <th class="p-3 text-center w-32">Statistik Akses</th>
-                                <th class="p-3 text-left w-80">Detail Nilai Materi</th>
+                                <th class="p-3 text-left w-80">Statistik Bulanan (Akses & Waktu)</th>
+                                <th class="p-3 text-left w-64">Detail Nilai Materi</th>
                                 <th class="p-3 text-center w-20">Rata-Rata</th>
                                 <th class="p-3 text-center w-20">Aksi</th>
                             </tr>
@@ -321,8 +319,10 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-2 text-xs text-gray-400 italic text-right">
-                    *M = Materi. Klik 'Kelola' untuk opsi Reset atau Hapus.
+                <div class="mt-2 text-xs text-gray-400 italic text-right flex items-center justify-end gap-3">
+                    <span>*M = Materi. Klik 'Kelola' untuk opsi Reset atau Hapus.</span>
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-arrow-pointer text-brand"></i> Jumlah Akses</span>
+                    <span class="flex items-center gap-1"><i class="fa-regular fa-clock text-game-orange"></i> Waktu (Menit)</span>
                 </div>
             </div>
         </div>
@@ -378,6 +378,24 @@
             currentUser: null,
             adminData: [], // Store data for filtering
 
+            // Helper untuk mengumpulkan statistik menjadi array 12 bulan (Jan-Des)
+            getAggregatedMonthlyStats: function(mStats) {
+                let aggregated = Array(12).fill().map(() => ({ access: 0, duration: 0 }));
+                if (mStats) {
+                    Object.keys(mStats).forEach(key => { // key is format "YYYY-MM"
+                        const parts = key.split('-');
+                        if(parts.length === 2) {
+                            const monthIndex = parseInt(parts[1], 10) - 1; // 0-11 for Jan-Dec
+                            if(monthIndex >= 0 && monthIndex < 12) {
+                                aggregated[monthIndex].access += (mStats[key].access || 0);
+                                aggregated[monthIndex].duration += (mStats[key].duration || 0);
+                            }
+                        }
+                    });
+                }
+                return aggregated;
+            },
+
             init: function() {
                 onAuthStateChanged(auth, async (user) => {
                     document.getElementById('loading').classList.add('hidden');
@@ -390,27 +408,65 @@
                             return;
                         }
 
-                        // User Biasa: Track Access
+                        // User Biasa: Track Access & Monthly Duration
                         const userRef = doc(db, "users", user.uid);
                         const docSnap = await getDoc(userRef);
                         
                         if (docSnap.exists()) {
-                            // Logic Update Statistik Akses
                             const data = docSnap.data();
-                            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-                            const newTotal = (data.totalAccess || 0) + 1;
+                            
+                            // Hitung Bulan Saat Ini (YYYY-MM)
+                            const now = new Date();
+                            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                            
+                            let mStats = data.monthlyStats || {};
+                            if (!mStats[currentMonth]) {
+                                mStats[currentMonth] = { access: 0, duration: 0 };
+                            }
+
+                            // Hanya tambah 'akses' jika ini sesi/login baru di tab ini
+                            let isNewSession = false;
+                            if (!sessionStorage.getItem('session_logged')) {
+                                mStats[currentMonth].access += 1;
+                                sessionStorage.setItem('session_logged', 'true');
+                                isNewSession = true;
+                            }
+
+                            const today = now.toISOString().split('T')[0];
+                            const newTotal = (data.totalAccess || 0) + (isNewSession ? 1 : 0);
                             
                             await updateDoc(userRef, {
                                 totalAccess: newTotal,
-                                lastAccess: today
+                                lastAccess: today,
+                                monthlyStats: mStats
                             });
 
                             // Gabungkan data lokal
                             this.currentUser = { 
                                 uid: user.uid, 
                                 ...data, 
-                                totalAccess: newTotal 
+                                totalAccess: newTotal,
+                                monthlyStats: mStats
                             };
+                            
+                            // Mulai Timer Penambahan Durasi (Setiap 1 Menit)
+                            if (!window.durationTracker) {
+                                window.durationTracker = setInterval(async () => {
+                                    try {
+                                        const snap = await getDoc(userRef);
+                                        if (snap.exists()) {
+                                            let d = snap.data();
+                                            let stats = d.monthlyStats || {};
+                                            if (!stats[currentMonth]) stats[currentMonth] = { access: 1, duration: 0 };
+                                            stats[currentMonth].duration = (stats[currentMonth].duration || 0) + 1;
+                                            await updateDoc(userRef, { monthlyStats: stats });
+                                        }
+                                    } catch (e) {
+                                        console.error("Gagal update durasi:", e);
+                                    }
+                                }, 60000); // 60.000 ms = 1 menit
+                            }
+
                             this.renderDashboard();
                         } else {
                             this.logout();
@@ -459,7 +515,13 @@
 
                 try {
                     const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                    // Initialize stats data
+                    
+                    // Inisialisasi Data Waktu Bulanan
+                    const now = new Date();
+                    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                    const initialStats = {};
+                    initialStats[currentMonth] = { access: 1, duration: 0 };
+                    
                     await setDoc(doc(db, "users", cred.user.uid), {
                         name: name,
                         nim: nim,
@@ -469,15 +531,22 @@
                         role: 'student',
                         totalXP: 0,
                         totalAccess: 1, 
-                        lastAccess: new Date().toISOString().split('T')[0]
+                        lastAccess: new Date().toISOString().split('T')[0],
+                        monthlyStats: initialStats
                     });
+                    
+                    sessionStorage.setItem('session_logged', 'true');
                     Swal.fire('Sukses', 'Akun berhasil dibuat!', 'success');
                 } catch(e) {
                     Swal.fire('Error', e.message, 'error');
                 }
             },
 
-            logout: () => signOut(auth).then(() => window.location.reload()),
+            logout: () => {
+                sessionStorage.removeItem('session_logged');
+                if (window.durationTracker) clearInterval(window.durationTracker);
+                signOut(auth).then(() => window.location.reload());
+            },
 
             // --- DASHBOARD MAHASISWA ---
             renderDashboard: function() {
@@ -615,6 +684,8 @@
             renderAdminTable: function(data) {
                 const tbody = document.getElementById('admin-table-body');
                 let html = '';
+                
+                const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 
                 data.forEach(d => {
                     let totalScore = 0;
@@ -626,7 +697,26 @@
                     });
                     const avg = Object.keys(scores).length ? (totalScore / Object.keys(scores).length).toFixed(1) : '0';
                     const percent = Math.round((completed / 13) * 100);
-                    const accessCount = d.totalAccess || 0;
+
+                    // --- GENERATE 12 MONTH GRID ---
+                    const aggregatedStats = this.getAggregatedMonthlyStats(d.monthlyStats);
+                    let monthlyStatsHtml = '<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-1 text-[9px]">';
+                    
+                    monthNamesShort.forEach((m, idx) => {
+                        const stats = aggregatedStats[idx];
+                        // Tampilkan semua 12 bulan
+                        monthlyStatsHtml += `
+                            <div class="bg-gray-50 p-1 rounded border border-gray-100 flex justify-between items-center" title="${m} - Akses: ${stats.access}x, Durasi: ${stats.duration}m">
+                                <span class="font-bold text-gray-700 w-6">${m}</span>
+                                <span class="flex gap-1 justify-end w-full">
+                                    <span class="text-brand w-6 text-right"><i class="fa-solid fa-arrow-pointer text-[8px]"></i> ${stats.access}</span>
+                                    <span class="text-game-orange w-6 text-right"><i class="fa-regular fa-clock text-[8px]"></i> ${stats.duration}</span>
+                                </span>
+                            </div>
+                        `;
+                    });
+                    monthlyStatsHtml += '</div>';
+                    // -----------------------------
 
                     // Detail Scores
                     let detailsHtml = '<div class="grid grid-cols-4 gap-1 text-[10px]">';
@@ -654,8 +744,8 @@
                                     <div class="h-full bg-brand rounded-full" style="width: ${percent}%"></div>
                                 </div>
                             </td>
-                            <td class="p-3 text-center align-top">
-                                <div class="font-bold text-gray-700 text-sm">Total: ${accessCount}x</div>
+                            <td class="p-2 align-top w-80">
+                                ${monthlyStatsHtml}
                             </td>
                             <td class="p-3 align-top">
                                 ${detailsHtml}
@@ -714,7 +804,6 @@
                 }
             },
 
-            // NEW: CONFIRM DELETE USER (POPUP WITH 2 OPTIONS)
             confirmDeleteUser: async (uid, name) => {
                 const result = await Swal.fire({
                     title: 'Kelola Data Mahasiswa',
@@ -731,7 +820,6 @@
                 });
 
                 if (result.isConfirmed) {
-                    // SweetAlert confirmation instead of native
                     const secondCheck = await Swal.fire({
                         title: 'Yakin Hapus Permanen?',
                         text: "Data akun ini akan hilang selamanya dari database!",
@@ -769,7 +857,16 @@
             // Download CSV
             exportCSV: function() {
                 try {
-                    let csvContent = "Nama,NIM,Kelas,Email,Total Akses,Materi Selesai,Rata-rata Nilai,M1,M2,M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13\n";
+                    const monthNamesFull = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                    
+                    // Buat Header Dinamis 12 Bulan (Akses & Durasi)
+                    let csvHeader = "Nama,NIM,Kelas,Email,";
+                    monthNamesFull.forEach(m => {
+                        csvHeader += `Akses ${m},Durasi ${m} (Menit),`;
+                    });
+                    csvHeader += "Materi Selesai,Rata-rata Nilai,M1,M2,M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13\n";
+                    
+                    let csvContent = csvHeader;
 
                     this.adminData.forEach(d => {
                         let totalScore = 0;
@@ -785,14 +882,21 @@
                         let mScores = [];
                         materials.forEach(m => mScores.push(scores[m.id] || 0));
 
-                        csvContent += `"${d.name}","${d.nim}","${d.kelas || '-'}","${d.email}","${d.totalAccess || 0}","${completed}/13","${avg}",${mScores.join(',')}\n`;
+                        // Generate 24 Kolom Data (12 Akses, 12 Durasi)
+                        const aggregatedStats = this.getAggregatedMonthlyStats(d.monthlyStats);
+                        let mStatsStr = "";
+                        aggregatedStats.forEach(stat => {
+                            mStatsStr += `"${stat.access}","${stat.duration}",`;
+                        });
+
+                        csvContent += `"${d.name}","${d.nim}","${d.kelas || '-'}","${d.email}",${mStatsStr}"${completed}/13","${avg}",${mScores.join(',')}\n`;
                     });
 
                     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement("a");
                     link.setAttribute("href", url);
-                    link.setAttribute("download", "rekap_nilai_mahasiswa.csv");
+                    link.setAttribute("download", "rekap_nilai_dan_akses.csv");
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
