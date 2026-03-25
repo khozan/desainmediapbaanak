@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materi 7: Tren & Inovasi Media Pembelajaran - Media PBA Anak</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        display: ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#c084fc', // Fuchsia light
+                            DEFAULT: '#9333ea', // Fuchsia DEFAULT
+                            dark: '#6b21a8', // Fuchsia dark
+                        },
+                        game: {
+                            yellow: '#fbbf24',
+                            orange: '#f59e0b',
+                            blue: '#3b82f6',
+                            red: '#ef4444',
+                            teal: '#14b8a6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-image: url("https://img.freepik.com/free-vector/hand-drawn-education-pattern-background_23-2149453715.jpg?w=1380&t=st=1709123456~exp=1709124056~hmac=abcdef");
+            background-color: #faf5ff; /* Light Fuchsia Tint */
+            background-blend-mode: overlay;
+            background-attachment: fixed;
+            background-size: cover;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(147, 51, 234, 0.1);
+        }
+
+        /* FLIP CARD STYLES */
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+            cursor: pointer;
+            height: 280px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+        .flip-card-front {
+            background-color: white;
+            color: black;
+            border: 2px solid #e9d5ff;
+        }
+        .flip-card-back {
+            background: linear-gradient(135deg, #9333ea, #c084fc);
+            color: white;
+            transform: rotateY(180deg);
+            overflow-y: auto;
+            justify-content: start;
+            padding-top: 1.5rem;
+            border: 2px solid #9333ea;
+        }
+
+        /* Quiz & Timer Styles */
+        .option-label { cursor: pointer; transition: all 0.2s ease; }
+        .option-input:checked + .option-label {
+            background-color: #faf5ff;
+            border-color: #9333ea;
+            color: #6b21a8;
+            box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.2);
+            transform: translateY(-2px);
+        }
+        .option-input:checked + .option-label .circle-check {
+            background-color: #9333ea;
+            border-color: #9333ea;
+        }
+        .option-input:checked + .option-label .circle-check::after {
+            content: '✔'; color: white; font-size: 10px; display: flex; align-items: center; justify-content: center;
+        }
+
+        .timer-warning {
+            animation: pulse-red 1s infinite;
+            background-color: #fee2e2 !important;
+            color: #b91c1c !important;
+            border-color: #b91c1c !important;
+        }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+
+        /* Scroll Progress */
+        #reading-progress-container {
+            position: fixed;
+            top: 64px; left: 0; width: 100%; height: 6px; background: rgba(229, 231, 235, 0.5); z-index: 40;
+        }
+        #reading-progress-bar {
+            height: 100%; background: linear-gradient(90deg, #c084fc, #9333ea); width: 0%; transition: width 0.1s;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800 min-h-screen flex flex-col">
+
+    <!-- READING PROGRESS -->
+    <div id="reading-progress-container">
+        <div id="reading-progress-bar"></div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="sticky top-0 z-50 glass-panel border-b border-white/40">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="index.html" class="flex items-center gap-2 text-gray-600 hover:text-brand transition font-bold">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                </a>
+                <div class="text-center">
+                    <h1 class="font-display font-bold text-lg text-brand-dark hidden md:block">Tren & Inovasi Media Pembelajaran</h1>
+                    <span class="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Level 7</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="user-name" class="text-xs font-bold text-gray-500 hidden sm:block">Loading...</span>
+                    <div class="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="flex-grow w-full max-w-6xl mx-auto p-4 md:p-6 pb-20 space-y-12">
+
+        <!-- HEADER MATERI -->
+        <div class="glass-panel p-10 rounded-3xl relative overflow-hidden text-center transform transition hover:scale-[1.01] duration-500">
+            <div class="absolute -top-10 -left-10 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl animate-pulse"></div>
+            <div class="absolute bottom-10 right-10 w-40 h-40 bg-fuchsia-500/10 rounded-full blur-2xl animate-pulse" style="animation-delay: 1s;"></div>
+            
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-400 to-fuchsia-600 text-white text-4xl mb-6 shadow-xl transform -rotate-6 hover:rotate-0 transition duration-300">
+                <i class="fa-solid fa-rocket"></i>
+            </div>
+            <h2 class="font-display font-bold text-3xl md:text-4xl text-gray-800 mb-3 leading-tight">Tren dan Inovasi Media Pembelajaran <br>Bahasa Arab untuk Anak di Era Digital</h2>
+            <p class="text-lg text-brand font-bold">Fokus pada Gamifikasi dan Microlearning</p>
+        </div>
+
+        <!-- ISI MATERI -->
+        <article class="space-y-12">
+            
+            <!-- A. Pengantar -->
+            <div class="glass-panel p-8 rounded-3xl shadow-sm border-l-8 border-brand">
+                <h3 class="font-display font-bold text-2xl text-gray-800 mb-4 flex items-center gap-3">
+                    <i class="fa-solid fa-globe text-brand"></i> A. Pengantar Tren Digital dalam Pendidikan Anak
+                </h3>
+                <p class="text-gray-600 leading-relaxed mb-4">
+                    Transformasi digital dalam pendidikan tidak hanya mengubah media pembelajaran, tetapi juga perilaku belajar anak <i>(learning behavior)</i>, gaya kognitif, dan ekspektasi pengalaman belajar. Anak-anak saat ini terbiasa dengan interaksi cepat, visual, dan <i>feedback</i> instan. Rentang fokus anak umumnya terbatas hanya sekitar <b>5 menit</b>.
+                </p>
+                <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                    <p class="font-bold text-purple-800 mb-2">Tantangan Utama Bahasa Arab:</p>
+                    <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+                        <li>Bahasa dianggap sulit dan asing.</li>
+                        <li>Anak cepat merasa bosan dengan metode konvensional.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- B. Microlearning -->
+            <div class="space-y-6">
+                <h3 class="font-display font-bold text-3xl text-gray-800 border-b-2 border-brand pb-2 inline-block">B. Konsep Utama Microlearning</h3>
+                
+                <div class="grid md:grid-cols-2 gap-6 items-start">
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h4 class="font-bold text-xl mb-3 text-purple-700">Mengapa Microlearning Sangat Efektif?</h4>
+                        <p class="text-sm text-gray-600 mb-4 text-justify">
+                            Karena rentang perhatian anak yang pendek, pendekatan <b>microlearning dengan aktivitas singkat</b> adalah yang paling efektif. Pendekatan ini sangat <b>sesuai dengan kapasitas memori dan perhatian anak</b>.
+                        </p>
+                        <ul class="text-sm space-y-3 text-gray-700">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-brain text-brand mt-1"></i>
+                                <span><b>Menghindari Overload Kognitif:</b> Membagi materi yang padat menjadi <b>unit-unit kecil</b> dengan menetapkan <b>satu tujuan belajar per unit</b> bertujuan secara spesifik untuk menghindari beban kognitif yang berlebih.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-layer-group text-brand mt-1"></i>
+                                <span><b>Spaced Repetition:</b> Teknik pengulangan berkala. Contoh: <b>flashcard digital yang diulang setiap hari dengan variasi soal</b> untuk memindahkan informasi ke memori jangka panjang.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- VIDEO MICROLEARNING -->
+                    <div class="rounded-2xl overflow-hidden shadow-lg border-4 border-white">
+                        <iframe class="w-full h-64" src="https://www.youtube.com/embed/KlbsuPAibfY" title="Microlearning Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <div class="bg-gray-800 text-white text-xs p-2 text-center font-bold">Video Pertemuan 8: Konsep Microlearning</div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mt-4">
+                    <h4 class="font-bold text-lg mb-3 text-gray-800">Contoh Penerapan Microlearning</h4>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <h5 class="font-bold text-blue-700 text-sm mb-1"><i class="fa-solid fa-video"></i> Microlearning Berbasis Visual</h5>
+                            <p class="text-xs text-gray-600">Contoh: Guru membuat <b>video 2 menit</b> tentang kosakata warna, kemudian siswa langsung diminta <b>menyebutkan contoh benda</b> sesuai warna tersebut untuk melatih ingatan aktif (active recall).</p>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+                            <h5 class="font-bold text-red-700 text-sm mb-1"><i class="fa-solid fa-robot"></i> Microlearning Interaktif</h5>
+                            <p class="text-xs text-gray-600">Contoh: Penggunaan <b>chatbot edukatif</b> untuk melatih percakapan sederhana secara dua arah (tanya-jawab otomatis).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- C. Gamifikasi -->
+            <div class="space-y-6">
+                <h3 class="font-display font-bold text-3xl text-gray-800 border-b-2 border-brand pb-2 inline-block mt-8">C. Gamifikasi Berbasis Pedagogi</h3>
+                
+                <div class="grid md:grid-cols-2 gap-6 items-start">
+                    <!-- VIDEO GAMIFIKASI -->
+                    <div class="rounded-2xl overflow-hidden shadow-lg border-4 border-white">
+                        <iframe class="w-full h-64" src="https://www.youtube.com/embed/MJbb4KuRGMw" title="Gamification Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <div class="bg-gray-800 text-white text-xs p-2 text-center font-bold">Video Referensi: Gamifikasi dalam Belajar</div>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h4 class="font-bold text-xl mb-3 text-purple-700">Elemen Psikologis dalam Gamifikasi</h4>
+                        <ul class="text-sm space-y-3 text-gray-700 text-justify">
+                            <li>
+                                <b>Motivasi Ekstrinsik:</b> Pemberian <b>poin</b> atau skor setelah siswa menjawab benar berfungsi sebagai motivasi ekstrinsik (dorongan dari luar).
+                            </li>
+                            <li>
+                                <b>Bahaya Desain Dangkal:</b> Jika gamifikasi hanya berfokus pada <b>hadiah tanpa tujuan belajar</b> yang jelas, maka proses <b>pembelajaran akan menjadi dangkal</b>.
+                            </li>
+                            <li>
+                                <b>Solusi Stress Kompetisi:</b> Jika papan peringkat (leaderboard) membuat siswa tertekan, guru sebaiknya beralih <b>menggunakan gamifikasi kolaboratif</b> atau misi kelompok agar lebih inklusif.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6 mt-4">
+                    <div class="bg-orange-50 p-6 rounded-2xl shadow-sm border border-orange-100">
+                        <h4 class="font-bold text-orange-700 text-lg mb-2"><i class="fa-solid fa-stairs"></i> Scaffolding dalam Gamifikasi</h4>
+                        <p class="text-sm text-gray-700 text-justify">
+                            Scaffolding adalah pemberian bantuan/tantangan bertahap. Dalam game edukasi, ini diwujudkan dengan alur level: <b>Huruf → Kata → Kalimat</b>. Alur bertahap ini adalah penerapan murni prinsip <b>scaffolding dalam gamifikasi</b>.
+                        </p>
+                    </div>
+                    <div class="bg-teal-50 p-6 rounded-2xl shadow-sm border border-teal-100">
+                        <h4 class="font-bold text-teal-700 text-lg mb-2"><i class="fa-solid fa-sliders"></i> Pembelajaran Adaptif</h4>
+                        <p class="text-sm text-gray-700 text-justify">
+                            Guru yang baik dapat menjadikan sistem ini adaptif. Strategi terbaik untuk pembelajaran adaptif adalah dengan menyediakan <b>level yang berbeda-beda sesuai dengan tingkat kemampuan masing-masing siswa</b>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- D & E. Integrasi, Tantangan & Evaluasi -->
+            <div class="space-y-6">
+                <h3 class="font-display font-bold text-3xl text-gray-800 border-b-2 border-brand pb-2 inline-block mt-8">D. Integrasi, Evaluasi & Pemecahan Masalah</h3>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-2xl shadow-sm border border-indigo-100">
+                        <h4 class="font-bold text-indigo-700 text-lg mb-3"><i class="fa-solid fa-link"></i> Kombinasi Paling Optimal</h4>
+                        <p class="text-sm text-gray-700 mb-3 text-justify">
+                            Desain pembelajaran digital yang paling optimal adalah gabungan dari <b>Microlearning + Gamifikasi + Feedback Instan</b>.
+                        </p>
+                        <div class="bg-white p-3 rounded-lg text-xs font-mono shadow-inner border border-gray-200">
+                            <b>Contoh Integrasi Sistematis:</b><br>
+                            Video Singkat → Kuis Interaktif → Dapat Poin → Unlock Level
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-rose-50 to-white p-6 rounded-2xl shadow-sm border border-rose-100">
+                        <h4 class="font-bold text-rose-700 text-lg mb-3"><i class="fa-solid fa-magnifying-glass-chart"></i> Evaluasi & Pemecahan Masalah</h4>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li><i class="fa-solid fa-circle-xmark text-red-500 mr-1"></i> <b>Siswa cepat bosan materi digital:</b> Solusi terbaik adalah <b>menggunakan storytelling (bercerita) dan variasi media</b>.</li>
+                            <li><i class="fa-solid fa-circle-xmark text-red-500 mr-1"></i> <b>Tidak ada peningkatan hasil:</b> Jika siswa rajin main tapi tidak pintar, berarti <b>materi tidak relevan atau desain tidak tepat</b>.</li>
+                            <li><i class="fa-solid fa-circle-xmark text-red-500 mr-1"></i> <b>Keterbatasan perangkat:</b> Jika device terbatas, guru harus <b>menggunakan blended learning</b> (kombinasi online & offline).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-brand text-white p-6 rounded-2xl shadow-md text-center">
+                    <h4 class="font-display font-bold text-xl mb-2"><i class="fa-solid fa-award"></i> Tolok Ukur Keberhasilan</h4>
+                    <p class="text-sm">
+                        Ingat, evaluasi keberhasilan sebuah gamifikasi pembelajaran <u>bukan</u> diukur dari desain visualnya yang menarik, melainkan mutlak didasarkan pada <b>peningkatan hasil belajar dan keterlibatan (engagement) siswa</b>.
+                    </p>
+                </div>
+            </div>
+
+        </article>
+
+        <!-- QUIZ GAME SECTION -->
+        <section id="quiz-section" class="mt-12 relative border-t-2 border-dashed border-gray-200 pt-12">
+            
+            <!-- START PANEL -->
+            <div id="start-panel" class="glass-panel p-10 rounded-3xl text-center shadow-2xl transform transition hover:scale-[1.02] duration-300 relative overflow-hidden border-2 border-brand/50">
+                <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-fuchsia-500/10 z-0"></div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-gradient-to-br from-brand to-fuchsia-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-purple-200 animate-bounce">
+                        <i class="fa-solid fa-gamepad text-4xl text-white"></i>
+                    </div>
+                    <h2 class="font-display font-bold text-3xl text-gray-800 mb-2">Uji Pemahaman Level 7</h2>
+                    <p class="text-gray-500 mb-6">Soal HOTS: Gamifikasi & Microlearning</p>
+                    <div class="flex items-center justify-center gap-4 text-sm text-gray-600 font-bold mb-8 bg-white/60 px-6 py-2 rounded-full shadow-sm border border-gray-100">
+                        <span><i class="fa-regular fa-clock text-red-500"></i> 15 Menit</span>
+                        <span>•</span>
+                        <span><i class="fa-solid fa-list-check text-blue-500"></i> 20 Soal</span>
+                        <span>•</span>
+                        <span><i class="fa-solid fa-trophy text-yellow-500"></i> KKM: 80</span>
+                    </div>
+                    <button onclick="startQuiz()" class="bg-gradient-to-r from-brand to-fuchsia-600 hover:from-brand-dark hover:to-brand text-white font-bold py-4 px-12 rounded-2xl shadow-xl shadow-brand/30 text-lg transition transform active:scale-95 flex items-center gap-3">
+                        <span>Mulai Kuis Akhir</span> <i class="fa-solid fa-play"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TIMER STICKY -->
+            <div id="timer-display" class="hidden fixed top-20 right-4 md:right-10 z-40 bg-white/90 backdrop-blur border-2 border-brand text-brand-dark px-5 py-2 rounded-full font-mono font-bold shadow-lg flex items-center gap-2 transform scale-110">
+                <i class="fa-regular fa-clock animate-pulse"></i> <span id="time-left" class="text-lg">15:00</span>
+            </div>
+
+            <!-- QUIZ FORM -->
+            <form id="quiz-form" onsubmit="event.preventDefault(); submitQuiz();" class="hidden space-y-6 mt-6">
+                <div id="questions-container" class="space-y-6"></div>
+
+                <div class="glass-panel p-6 rounded-2xl sticky bottom-4 z-40 border-t-4 border-brand shadow-2xl">
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm font-bold text-gray-600">
+                            Terjawab: <span id="answered-count" class="text-brand text-lg">0</span>/20
+                        </div>
+                        <button type="submit" id="btn-submit" class="bg-brand hover:bg-brand-dark text-white font-bold py-3 px-8 rounded-xl shadow-lg transform active:scale-95 transition flex items-center gap-2">
+                            <span>Kirim Jawaban</span> <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t py-6 mt-10">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <p class="font-display font-bold text-gray-400 text-sm">© 2026 Desain Pengembangan Media Ajar Bahasa Arab.</p>
+        </div>
+    </footer>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-jHdi3VVu9F5i6tLIjGJCcVFfHBieqbI",
+            authDomain: "desain-mediapba-anak.firebaseapp.com",
+            projectId: "desain-mediapba-anak",
+            storageBucket: "desain-mediapba-anak.firebasestorage.app",
+            messagingSenderId: "118347735703",
+            appId: "1:118347735703:web:bafeb4590ddbe85f7c7fd2",
+            measurementId: "G-RN0S3X8V27"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let quizInterval;
+        let timeRemaining = 15 * 60; 
+
+        // READING PROGRESS
+        window.onscroll = function() {
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            document.getElementById("reading-progress-bar").style.width = scrolled + "%";
+        };
+
+        // SOAL MATERI 7 (20 SOAL HOTS)
+        const quizData = [
+            { q: "Seorang guru membuat video 2 menit tentang kosakata warna dalam Bahasa Arab, kemudian siswa diminta menyebutkan contoh benda sesuai warna tersebut. Pendekatan ini paling tepat dikategorikan sebagai...", options: ["Pembelajaran konvensional", "Microlearning berbasis visual", "Gamifikasi berbasis kompetisi", "Problem-based learning", "Cooperative learning"], a: 1 },
+            { q: "Jika seorang guru ingin mengurangi beban kognitif siswa dalam pembelajaran Bahasa Arab, strategi yang paling tepat adalah...", options: ["Memberikan banyak materi sekaligus", "Menggunakan ceramah panjang", "Membagi materi menjadi unit kecil", "Menghilangkan latihan", "Memberikan tugas rumah banyak"], a: 2 },
+            { q: "Seorang siswa hanya mampu fokus selama 5 menit dalam pembelajaran. Pendekatan yang paling sesuai adalah...", options: ["Diskusi kelompok panjang", "Microlearning dengan aktivitas singkat", "Pembelajaran berbasis buku teks", "Ceramah 30 menit", "Evaluasi akhir saja"], a: 1 },
+            { q: "Dalam konteks gamifikasi, pemberian poin setelah siswa menjawab benar berfungsi sebagai...", options: ["Penalti", "Motivasi ekstrinsik", "Evaluasi sumatif", "Pengganti materi", "Hambatan belajar"], a: 1 },
+            { q: "Seorang guru menggunakan flashcard digital yang diulang setiap hari dengan variasi soal. Strategi ini mencerminkan...", options: ["Behaviorism tanpa penguatan", "Spaced repetition dalam microlearning", "Gamifikasi kompetitif", "Pembelajaran tradisional", "Inquiry learning"], a: 1 },
+            { q: "Guru menggabungkan video singkat dan kuis interaktif dengan sistem skor. Integrasi ini menunjukkan...", options: ["Pembelajaran konvensional", "Kombinasi microlearning dan gamifikasi", "Pembelajaran berbasis proyek", "Model ceramah digital", "Evaluasi sumatif"], a: 1 },
+            { q: "Jika siswa merasa tertekan karena leaderboard, maka guru sebaiknya...", options: ["Menghapus semua gamifikasi", "Menambah kompetisi", "Menggunakan gamifikasi kolaboratif", "Menghilangkan materi", "Memberi hukuman"], a: 2 },
+            { q: "Seorang guru membuat alur belajar bertahap dari huruf → kata → kalimat dengan level berbeda. Ini menunjukkan prinsip...", options: ["Random learning", "Scaffolding dalam gamifikasi", "Evaluasi sumatif", "Passive learning", "Trial and error"], a: 1 },
+            { q: "Jika siswa cepat bosan dengan materi digital, solusi terbaik adalah...", options: ["Mengurangi variasi", "Menambah durasi materi", "Menggunakan storytelling dan variasi media", "Menghilangkan teknologi", "Memberikan hukuman"], a: 2 },
+            { q: "Seorang guru menggunakan chatbot untuk latihan percakapan sederhana Bahasa Arab. Pendekatan ini termasuk...", options: ["Gamifikasi penuh", "Microlearning interaktif", "Ceramah digital", "Evaluasi akhir", "Drill manual"], a: 1 },
+            { q: "Mengapa microlearning lebih efektif dibanding pembelajaran panjang untuk anak?", options: ["Karena lebih murah", "Karena sesuai kapasitas memori dan perhatian anak", "Karena lebih mudah dibuat", "Karena tidak butuh teknologi", "Karena tidak perlu evaluasi"], a: 1 },
+            { q: "Jika gamifikasi hanya berfokus pada hadiah tanpa tujuan belajar, maka dampaknya adalah...", options: ["Pembelajaran meningkat signifikan", "Motivasi intrinsik meningkat", "Pembelajaran menjadi dangkal", "Siswa lebih mandiri", "Materi lebih mudah dipahami"], a: 2 },
+            { q: "Seorang guru ingin meningkatkan keterlibatan siswa tanpa kompetisi berlebihan. Strategi terbaik adalah...", options: ["Leaderboard terbuka", "Reward individu saja", "Misi kolaboratif", "Tes tertulis", "Ceramah"], a: 2 },
+            { q: "Dalam desain microlearning, penggunaan satu tujuan belajar per unit bertujuan untuk...", options: ["Mempercepat pembelajaran", "Mengurangi biaya", "Menghindari overload kognitif", "Mengurangi interaksi", "Menyederhanakan evaluasi"], a: 2 },
+            { q: "Jika siswa tidak menunjukkan peningkatan meskipun menggunakan gamifikasi, maka analisis yang paling tepat adalah...", options: ["Gamifikasi pasti salah", "Materi tidak relevan atau desain tidak tepat", "Siswa tidak mampu", "Teknologi tidak penting", "Harus dihentikan"], a: 1 },
+            { q: "Manakah desain pembelajaran paling optimal?", options: ["Video panjang tanpa interaksi", "Microlearning + gamifikasi + feedback instan", "Ceramah digital", "Buku teks saja", "Tanpa evaluasi"], a: 1 },
+            { q: "Guru ingin membuat pembelajaran adaptif. Strategi terbaik adalah...", options: ["Materi sama untuk semua siswa", "Level berbeda sesuai kemampuan siswa", "Tanpa evaluasi", "Tanpa teknologi", "Satu metode saja"], a: 1 },
+            { q: "Evaluasi keberhasilan gamifikasi seharusnya didasarkan pada...", options: ["Jumlah game", "Tampilan menarik", "Peningkatan hasil belajar dan keterlibatan", "Lama waktu belajar", "Banyaknya aplikasi"], a: 2 },
+            { q: "Jika keterbatasan perangkat menjadi kendala, solusi terbaik adalah...", options: ["Menghentikan pembelajaran digital", "Menggunakan blended learning", "Mengurangi materi", "Menghilangkan evaluasi", "Menggunakan ceramah saja"], a: 1 },
+            { q: "Seorang guru merancang sistem belajar: video singkat → kuis → poin → unlock level. Model ini menunjukkan...", options: ["Pembelajaran konvensional", "Integrasi microlearning dan gamifikasi yang sistematis", "Pembelajaran pasif", "Evaluasi akhir saja", "Drill tradisional"], a: 1 }
+        ];
+
+        // RENDER SOAL
+        const renderQuiz = () => {
+            const container = document.getElementById('questions-container');
+            let html = '';
+
+            quizData.forEach((item, index) => {
+                let optionsHtml = '';
+                item.options.forEach((opt, optIndex) => {
+                    optionsHtml += `
+                        <div class="relative">
+                            <input type="radio" name="q${index}" value="${optIndex}" id="q${index}_${optIndex}" class="option-input peer sr-only" onchange="window.updateProgress()">
+                            <label for="q${index}_${optIndex}" class="option-label flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:bg-purple-50 peer-focus:ring-2 peer-focus:ring-purple-500 peer-focus:ring-offset-2">
+                                <div class="circle-check w-5 h-5 border-2 border-gray-300 rounded-full mr-3 flex-shrink-0 transition-colors"></div>
+                                <span class="text-sm font-medium text-gray-700">${opt}</span>
+                            </label>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    <div class="glass-panel p-6 rounded-2xl animate-fade-in-up" style="animation-delay: ${index * 0.05}s">
+                        <div class="flex items-start gap-3 mb-4">
+                            <span class="bg-brand text-white font-bold px-2 py-1 rounded text-xs shadow-sm">No. ${index + 1}</span>
+                            <p class="font-bold text-gray-800 text-base leading-snug">${item.q}</p>
+                        </div>
+                        <div class="space-y-3">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        };
+
+        // START QUIZ
+        window.startQuiz = () => {
+            document.getElementById('start-panel').classList.add('hidden');
+            document.getElementById('quiz-form').classList.remove('hidden');
+            document.getElementById('timer-display').classList.remove('hidden');
+            document.getElementById('timer-display').scrollIntoView({ behavior: 'smooth' });
+
+            quizInterval = setInterval(() => {
+                timeRemaining--;
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                document.getElementById('time-left').innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeRemaining <= 300) document.getElementById('timer-display').classList.add('timer-warning');
+                if (timeRemaining <= 0) {
+                    clearInterval(quizInterval);
+                    Swal.fire({ title: 'Waktu Habis!', text: 'Dikirim otomatis.', icon: 'info', timer: 2000, showConfirmButton: false }).then(() => window.submitQuiz());
+                }
+            }, 1000);
+        };
+
+        window.updateProgress = () => {
+            const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+            document.getElementById('answered-count').innerText = answered;
+        };
+
+        // SUBMIT
+        window.submitQuiz = async () => {
+            if(quizInterval) clearInterval(quizInterval);
+            const btn = document.getElementById('btn-submit');
+            const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+            
+            if (timeRemaining > 0 && answered < quizData.length) {
+                Swal.fire({
+                    title: 'Belum Selesai',
+                    text: `Baru menjawab ${answered}/${quizData.length}. Yakin kirim?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Kirim',
+                    cancelButtonText: 'Lanjut'
+                }).then((result) => {
+                    if (result.isConfirmed) processScore();
+                    else {
+                        quizInterval = setInterval(() => {
+                            timeRemaining--;
+                        }, 1000);
+                    }
+                });
+                return;
+            }
+            processScore();
+        };
+
+        const processScore = async () => {
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Menilai...';
+
+            let correct = 0;
+            quizData.forEach((item, index) => {
+                const selectedEl = document.querySelector(`input[name="q${index}"]:checked`);
+                if (selectedEl && parseInt(selectedEl.value) === item.a) correct++;
+            });
+
+            const score = Math.round((correct / quizData.length) * 100);
+
+            try {
+                if (currentUser) {
+                    const userRef = doc(db, "users", currentUser.uid);
+                    await updateDoc(userRef, { "scores.7": score }); // Save to score 7
+
+                    if (score >= 80) {
+                        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+                        await Swal.fire({
+                            title: 'Luar Biasa!',
+                            html: `Nilai: <span class="text-5xl font-bold text-brand block my-4">${score}</span>Materi selanjutnya terbuka!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ke Dashboard',
+                            confirmButtonColor: '#9333ea'
+                        });
+                    } else {
+                        await Swal.fire({
+                            title: 'Belum Lulus',
+                            html: `Nilai: <span class="text-5xl font-bold text-red-500 block my-4">${score}</span>Butuh 80 untuk lulus.`,
+                            icon: 'error',
+                            confirmButtonText: 'Coba Lagi',
+                            confirmButtonColor: '#f59e0b'
+                        });
+                    }
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+                btn.disabled = false;
+                btn.innerText = 'Kirim Jawaban';
+            }
+        };
+
+        // INIT & TIME TRACKER
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
+                
+                if (docSnap.exists()) {
+                    document.getElementById('user-name').innerText = docSnap.data().name;
+                    
+                    // -- MONTHLY TIME TRACKING (Connected to Admin logic in index.html) --
+                    const now = new Date();
+                    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                    
+                    if (!window.durationTracker) {
+                        window.durationTracker = setInterval(async () => {
+                            try {
+                                const snap = await getDoc(userRef);
+                                if (snap.exists()) {
+                                    let d = snap.data();
+                                    let stats = d.monthlyStats || {};
+                                    if (!stats[currentMonth]) stats[currentMonth] = { access: 1, duration: 0 };
+                                    stats[currentMonth].duration = (stats[currentMonth].duration || 0) + 1;
+                                    await updateDoc(userRef, { monthlyStats: stats });
+                                }
+                            } catch (e) {
+                                console.error("Gagal update durasi:", e);
+                            }
+                        }, 60000); // Trigger every 1 minute
+                    }
+                }
+                renderQuiz();
+            } else {
+                Swal.fire({
+                    title: 'Sesi Tidak Ditemukan',
+                    text: 'Silakan login kembali.',
+                    icon: 'warning',
+                    confirmButtonText: 'Login',
+                    allowOutsideClick: false
+                }).then(() => { window.location.href = 'index.html'; });
+            }
+        });
+    </script>
+</body>
+</html>

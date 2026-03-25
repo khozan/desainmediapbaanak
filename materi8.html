@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materi 8: Tren Media Pembelajaran Bahasa Asing - Media PBA Anak</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        display: ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#818cf8', // Indigo light
+                            DEFAULT: '#4f46e5', // Indigo DEFAULT
+                            dark: '#3730a3', // Indigo dark
+                        },
+                        game: {
+                            yellow: '#fbbf24',
+                            orange: '#f59e0b',
+                            blue: '#3b82f6',
+                            red: '#ef4444',
+                            teal: '#14b8a6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-image: url("https://img.freepik.com/free-vector/hand-drawn-education-pattern-background_23-2149453715.jpg?w=1380&t=st=1709123456~exp=1709124056~hmac=abcdef");
+            background-color: #eef2ff; /* Light Indigo Tint */
+            background-blend-mode: overlay;
+            background-attachment: fixed;
+            background-size: cover;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(79, 70, 229, 0.1);
+        }
+
+        /* FLIP CARD STYLES */
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+            cursor: pointer;
+            height: 300px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+        .flip-card-front {
+            background-color: white;
+            color: black;
+            border: 2px solid #c7d2fe;
+        }
+        .flip-card-back {
+            background: linear-gradient(135deg, #4f46e5, #818cf8);
+            color: white;
+            transform: rotateY(180deg);
+            overflow-y: auto;
+            justify-content: start;
+            padding-top: 1.5rem;
+            border: 2px solid #4f46e5;
+        }
+
+        /* Hover Reveal Styles */
+        .reveal-box {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .reveal-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3);
+        }
+        
+        /* Quiz & Timer Styles */
+        .option-label { cursor: pointer; transition: all 0.2s ease; }
+        .option-input:checked + .option-label {
+            background-color: #eef2ff;
+            border-color: #4f46e5;
+            color: #3730a3;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+            transform: translateY(-2px);
+        }
+        .option-input:checked + .option-label .circle-check {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+        .option-input:checked + .option-label .circle-check::after {
+            content: '✔'; color: white; font-size: 10px; display: flex; align-items: center; justify-content: center;
+        }
+
+        .timer-warning {
+            animation: pulse-red 1s infinite;
+            background-color: #fee2e2 !important;
+            color: #b91c1c !important;
+            border-color: #b91c1c !important;
+        }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+
+        /* Scroll Progress */
+        #reading-progress-container {
+            position: fixed;
+            top: 64px; left: 0; width: 100%; height: 6px; background: rgba(229, 231, 235, 0.5); z-index: 40;
+        }
+        #reading-progress-bar {
+            height: 100%; background: linear-gradient(90deg, #818cf8, #4f46e5); width: 0%; transition: width 0.1s;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800 min-h-screen flex flex-col">
+
+    <!-- READING PROGRESS -->
+    <div id="reading-progress-container">
+        <div id="reading-progress-bar"></div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="sticky top-0 z-50 glass-panel border-b border-white/40">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="index.html" class="flex items-center gap-2 text-gray-600 hover:text-brand transition font-bold">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                </a>
+                <div class="text-center">
+                    <h1 class="font-display font-bold text-lg text-brand-dark hidden md:block">Tren Media Asing: Digitalisasi & Interaktivitas</h1>
+                    <span class="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Level 8</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="user-name" class="text-xs font-bold text-gray-500 hidden sm:block">Loading...</span>
+                    <div class="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="flex-grow w-full max-w-6xl mx-auto p-4 md:p-6 pb-20 space-y-12">
+
+        <!-- HEADER MATERI -->
+        <div class="glass-panel p-10 rounded-3xl relative overflow-hidden text-center transform transition hover:scale-[1.01] duration-500">
+            <div class="absolute -top-10 -left-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl animate-pulse"></div>
+            <div class="absolute bottom-10 right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl animate-pulse" style="animation-delay: 1s;"></div>
+            
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-400 to-blue-600 text-white text-4xl mb-6 shadow-xl transform -rotate-6 hover:rotate-0 transition duration-300">
+                <i class="fa-solid fa-laptop-code"></i>
+            </div>
+            <h2 class="font-display font-bold text-3xl md:text-4xl text-gray-800 mb-3 leading-tight">Tren Media Pembelajaran <br>Bahasa Asing untuk Anak</h2>
+            <p class="text-lg text-brand font-bold bg-indigo-50 inline-block px-4 py-1 rounded-full border border-indigo-100">Fokus: Digitalisasi dan Interaktivitas</p>
+        </div>
+
+        <!-- ISI MATERI -->
+        <article class="space-y-12">
+            
+            <!-- 1. Pendahuluan -->
+            <div class="glass-panel p-8 rounded-3xl shadow-sm border-l-8 border-brand">
+                <h3 class="font-display font-bold text-2xl text-gray-800 mb-4 flex items-center gap-3">
+                    <i class="fa-solid fa-flag-checkered text-brand"></i> 1. Pendahuluan
+                </h3>
+                <p class="text-gray-600 leading-relaxed mb-4 text-justify">
+                    Perkembangan teknologi digital telah merevolusi cara anak-anak belajar bahasa asing. Terdapat pergeseran yang sangat nyata dari <b>metode konvensional</b> ke penggunaan <b>media digital yang interaktif dan menarik</b>.
+                </p>
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-start gap-3">
+                    <i class="fa-solid fa-bullseye text-brand text-xl mt-1"></i>
+                    <div>
+                        <p class="font-bold text-indigo-800">Tujuan Pembelajaran:</p>
+                        <p class="text-sm text-gray-700">Memahami tren terkini, manfaat, tantangan, dan implikasi dari penggunaan media digital dan interaktif dalam pembelajaran bahasa asing untuk anak.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Digitalisasi (Gamified Cards) -->
+            <div class="space-y-6">
+                <h3 class="font-display font-bold text-3xl text-gray-800 border-b-2 border-brand pb-2 inline-block">2. Digitalisasi Pembelajaran Bahasa Asing</h3>
+                <p class="text-gray-600">Ketuk (tap) atau arahkan kursor pada kartu di bawah ini untuk membuka rahasia digitalisasi:</p>
+
+                <div class="grid md:grid-cols-3 gap-6 mt-4">
+                    <!-- Card 1 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="text-5xl text-blue-500 mb-4"><i class="fa-solid fa-robot"></i></div>
+                                <h4 class="font-bold text-xl text-gray-800">Integrasi Alat Digital</h4>
+                                <span class="mt-4 text-xs font-bold text-brand uppercase bg-indigo-50 px-3 py-1 rounded-full"><i class="fa-solid fa-hand-pointer animate-bounce"></i> Ketuk / Hover</span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-white mb-2 text-lg border-b border-indigo-300 pb-1">Detail Integrasi</h5>
+                                <ul class="text-sm text-left px-5 list-disc space-y-2 mt-2">
+                                    <li>Menggunakan <b>video, buku cerita digital, dan robot sosial</b> untuk usia dini.</li>
+                                    <li>Konten mutlak harus sesuai <b>tahap perkembangan anak</b>.</li>
+                                    <li>Interaksi agen digital/dewasa meningkatkan efektivitas (Butler, 2022).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="text-5xl text-teal-500 mb-4"><i class="fa-solid fa-chalkboard-user"></i></div>
+                                <h4 class="font-bold text-xl text-gray-800">E-Learning & Blended</h4>
+                                <span class="mt-4 text-xs font-bold text-brand uppercase bg-indigo-50 px-3 py-1 rounded-full"><i class="fa-solid fa-hand-pointer animate-bounce"></i> Ketuk / Hover</span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-white mb-2 text-lg border-b border-indigo-300 pb-1">Alternatif Strategis</h5>
+                                <ul class="text-sm text-left px-5 list-disc space-y-2 mt-2">
+                                    <li>Dipercepat oleh pandemi COVID-19.</li>
+                                    <li><b>Blended learning</b> (kombinasi online dan tatap muka) menjadi alternatif utama.</li>
+                                    <li>Tantangan: Sebagian siswa masih menyukai gaya tradisional (Pikhart et al., 2022).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <div class="text-5xl text-orange-500 mb-4"><i class="fa-solid fa-gamepad"></i></div>
+                                <h4 class="font-bold text-xl text-gray-800">Media Interaktif</h4>
+                                <span class="mt-4 text-xs font-bold text-brand uppercase bg-indigo-50 px-3 py-1 rounded-full"><i class="fa-solid fa-hand-pointer animate-bounce"></i> Ketuk / Hover</span>
+                            </div>
+                            <div class="flip-card-back">
+                                <h5 class="font-bold text-white mb-2 text-lg border-b border-indigo-300 pb-1">DGBLL & AI</h5>
+                                <ul class="text-sm text-left px-5 list-disc space-y-2 mt-2">
+                                    <li><b>Digital Game-Based Language Learning (DGBLL)</b>: Suasana belajar konstruktivis & menyenangkan.</li>
+                                    <li><b>Chatbot & AI</b> (cth: BookBuddy): Latihan bahasa yang alami.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Interaktivitas -->
+            <div class="space-y-6">
+                <h3 class="font-display font-bold text-3xl text-gray-800 border-b-2 border-brand pb-2 inline-block mt-8">3. Interaktivitas dalam Pembelajaran</h3>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="reveal-box bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex gap-4 items-start">
+                        <div class="bg-blue-100 text-blue-600 p-3 rounded-xl text-2xl shrink-0"><i class="fa-brands fa-whatsapp"></i></div>
+                        <div>
+                            <h4 class="font-bold text-lg text-gray-800 mb-2">Media Sosial & Komunikasi</h4>
+                            <p class="text-sm text-gray-600 text-justify">
+                                Platform seperti WhatsApp dan Instagram digunakan untuk aktivitas komunikasi aktif bahasa asing. Teknologi <b>Web 2.0</b> dan dunia virtual menawarkan <b>konteks belajar komunikasi yang realistis</b> dan relevan (Petrova, 2023).
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="reveal-box bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex gap-4 items-start">
+                        <div class="bg-rose-100 text-rose-600 p-3 rounded-xl text-2xl shrink-0"><i class="fa-solid fa-film"></i></div>
+                        <div>
+                            <h4 class="font-bold text-lg text-gray-800 mb-2">Lingkungan Audiovisual</h4>
+                            <p class="text-sm text-gray-600 text-justify">
+                                Film dan media audiovisual meningkatkan motivasi dan pemahaman budaya. Selain itu, <b>Multilingual Digital Storytelling (MDST)</b> sangat cocok untuk <b>anak dengan kebutuhan khusus</b>, serta meningkatkan literasi digital (Cersosimo, 2023).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Tantangan -->
+            <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-8 rounded-3xl border border-indigo-100">
+                <h3 class="font-display font-bold text-2xl text-indigo-900 mb-6"><i class="fa-solid fa-triangle-exclamation"></i> 4. Tantangan & Pertimbangan</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white/80 backdrop-blur p-5 rounded-2xl border-l-4 border-yellow-500">
+                        <h4 class="font-bold text-gray-800 mb-2">Adaptasi Guru & Siswa</h4>
+                        <ul class="text-sm text-gray-700 space-y-1 list-disc pl-4">
+                            <li>Diperlukan pelatihan guru untuk literasi digital.</li>
+                            <li>Jika guru <b>kurang literasi digital</b>, maka pemanfaatan teknologi <b>tidak akan optimal</b>.</li>
+                            <li>Kurangnya inovasi aplikasi di pendidikan tradisional.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white/80 backdrop-blur p-5 rounded-2xl border-l-4 border-green-500">
+                        <h4 class="font-bold text-gray-800 mb-2">Perspektif Orang Tua</h4>
+                        <ul class="text-sm text-gray-700 space-y-1 list-disc pl-4">
+                            <li>Orang tua mendukung digitalisasi karena aksesibilitasnya yang tinggi.</li>
+                            <li>Kekhawatiran utama: <b>Kesesuaian konten (tidak sesuai usia bisa sebabkan kebingungan / overload)</b> dan kualitas materi.</li>
+                            <li>Solusi: Kurasi dan seleksi konten berkualitas.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Tabel & Kesimpulan -->
+            <div class="space-y-6">
+                <h3 class="font-display font-bold text-2xl text-gray-800 mb-4">5. Ringkasan Eksekutif</h3>
+                
+                <div class="overflow-x-auto glass-panel rounded-xl shadow-sm border border-gray-200">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="bg-indigo-50 text-indigo-800 border-b border-indigo-100">
+                            <tr>
+                                <th class="p-4 w-1/4 font-bold">Aspek</th>
+                                <th class="p-4 font-bold">Rincian</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-4 font-bold text-gray-800">Alat Digital</td>
+                                <td class="p-4">Video, buku digital, robot sosial, AI, chatbot.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-4 font-bold text-gray-800">Media Interaktif</td>
+                                <td class="p-4">Game edukatif (DGBLL), media sosial, Web 2.0, storytelling.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-4 font-bold text-gray-800">Manfaat Utama</td>
+                                <td class="p-4">Meningkatkan keterlibatan, pemahaman budaya, relevansi kontekstual.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-brand text-white p-6 rounded-2xl shadow-md flex items-center gap-4 mt-6">
+                    <i class="fa-solid fa-lightbulb text-4xl text-game-yellow"></i>
+                    <div>
+                        <h4 class="font-bold text-lg mb-1">Kesimpulan</h4>
+                        <p class="text-sm opacity-90 text-justify">
+                            Teknologi memberikan peluang besar untuk meningkatkan motivasi dan keterampilan bahasa. Namun, evaluasi keberhasilan <b>bukan dinilai dari banyaknya media</b>, melainkan <b>peningkatan keterampilan bahasa dan partisipasi siswa</b>. Keberhasilan ini membutuhkan kesiapan infrastruktur, literasi guru, dan kurasi konten.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referensi Accordion -->
+            <details class="glass-panel p-5 rounded-2xl group cursor-pointer transition-all duration-300">
+                <summary class="flex justify-between items-center font-bold text-gray-700 list-none select-none">
+                    <span class="flex items-center gap-2 text-lg"><i class="fa-solid fa-book-bookmark text-brand"></i> Referensi Utama (Scopus Indexed)</span>
+                    <span class="transition-transform duration-300 group-open:rotate-180 bg-indigo-50 p-2 rounded-full w-8 h-8 flex items-center justify-center text-brand"><i class="fa-solid fa-chevron-down text-sm"></i></span>
+                </summary>
+                <div class="mt-4 pt-4 border-t border-gray-100 animate-fade-in-up">
+                    <ul class="space-y-3 text-xs text-gray-600 font-mono text-justify pl-2 h-40 overflow-y-auto custom-scrollbar">
+                        <li>Butler, Y.G. (2022). Learning through digital technologies among pre-primary school children.</li>
+                        <li>Kosharna, N. et al. (2023). Digital and multimedia technologies in teaching foreign languages.</li>
+                        <li>Pikhart, M. et al. (2022). Students’ Experience with Digital Media in L2 Acquisition.</li>
+                        <li>Raffone, A. (2022). Gamifying English Language Learning.</li>
+                        <li>Ruan, S. et al. (2019). Bookbuddy: Voice chatbot for language learning.</li>
+                        <li>Cherednichenko, O. et al. (2024). Large language models for foreign language acquisition.</li>
+                        <li>Petrova, Y. (2023). Foreign Language Learning via Social Media.</li>
+                        <li>Sykes, J.M. et al. (2008). Web 2.0 and virtual worlds for language education.</li>
+                        <li>Cersosimo, R. (2023). Multilingual digital storytelling and inclusion.</li>
+                        <li>Obojska, M.A. & Vaiouli, P. (2023). Digital media as language learning space in families.</li>
+                    </ul>
+                </div>
+            </details>
+
+        </article>
+
+        <!-- QUIZ GAME SECTION -->
+        <section id="quiz-section" class="mt-12 relative border-t-2 border-dashed border-gray-200 pt-12">
+            
+            <!-- START PANEL -->
+            <div id="start-panel" class="glass-panel p-10 rounded-3xl text-center shadow-2xl transform transition hover:scale-[1.02] duration-300 relative overflow-hidden border-2 border-brand/50">
+                <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-blue-500/10 z-0"></div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div class="w-24 h-24 bg-gradient-to-br from-brand to-blue-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-indigo-200 animate-bounce">
+                        <i class="fa-solid fa-graduation-cap text-4xl text-white"></i>
+                    </div>
+                    <h2 class="font-display font-bold text-3xl text-gray-800 mb-2">Tantangan Kuis Level 8</h2>
+                    <p class="text-gray-500 mb-6">Soal HOTS: Digitalisasi & Interaktivitas</p>
+                    <div class="flex items-center justify-center gap-4 text-sm text-gray-600 font-bold mb-8 bg-white/60 px-6 py-2 rounded-full shadow-sm border border-gray-100">
+                        <span><i class="fa-regular fa-clock text-red-500"></i> 15 Menit</span>
+                        <span>•</span>
+                        <span><i class="fa-solid fa-list-check text-blue-500"></i> 20 Soal</span>
+                        <span>•</span>
+                        <span><i class="fa-solid fa-trophy text-yellow-500"></i> KKM: 80</span>
+                    </div>
+                    <button onclick="startQuiz()" class="bg-gradient-to-r from-brand to-blue-600 hover:from-brand-dark hover:to-brand text-white font-bold py-4 px-12 rounded-2xl shadow-xl shadow-brand/30 text-lg transition transform active:scale-95 flex items-center gap-3">
+                        <span>Mulai Kuis Sekarang</span> <i class="fa-solid fa-play"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TIMER STICKY -->
+            <div id="timer-display" class="hidden fixed top-20 right-4 md:right-10 z-40 bg-white/90 backdrop-blur border-2 border-brand text-brand-dark px-5 py-2 rounded-full font-mono font-bold shadow-lg flex items-center gap-2 transform scale-110">
+                <i class="fa-regular fa-clock animate-pulse"></i> <span id="time-left" class="text-lg">15:00</span>
+            </div>
+
+            <!-- QUIZ FORM -->
+            <form id="quiz-form" onsubmit="event.preventDefault(); submitQuiz();" class="hidden space-y-6 mt-6">
+                <div id="questions-container" class="space-y-6"></div>
+
+                <div class="glass-panel p-6 rounded-2xl sticky bottom-4 z-40 border-t-4 border-brand shadow-2xl">
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm font-bold text-gray-600">
+                            Terjawab: <span id="answered-count" class="text-brand text-lg">0</span>/20
+                        </div>
+                        <button type="submit" id="btn-submit" class="bg-brand hover:bg-brand-dark text-white font-bold py-3 px-8 rounded-xl shadow-lg transform active:scale-95 transition flex items-center gap-2">
+                            <span>Kirim Jawaban</span> <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t py-6 mt-10">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <p class="font-display font-bold text-gray-400 text-sm">© 2026 Desain Pengembangan Media Ajar Bahasa Arab.</p>
+        </div>
+    </footer>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-jHdi3VVu9F5i6tLIjGJCcVFfHBieqbI",
+            authDomain: "desain-mediapba-anak.firebaseapp.com",
+            projectId: "desain-mediapba-anak",
+            storageBucket: "desain-mediapba-anak.firebasestorage.app",
+            messagingSenderId: "118347735703",
+            appId: "1:118347735703:web:bafeb4590ddbe85f7c7fd2",
+            measurementId: "G-RN0S3X8V27"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let quizInterval;
+        let timeRemaining = 15 * 60; 
+
+        // READING PROGRESS
+        window.onscroll = function() {
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            document.getElementById("reading-progress-bar").style.width = scrolled + "%";
+        };
+
+        // SOAL MATERI 8 (20 SOAL HOTS)
+        const quizData = [
+            { q: "Perubahan utama dalam pembelajaran bahasa asing anak di era digital adalah...", options: ["Penggunaan buku teks lebih dominan", "Peralihan ke media digital interaktif", "Pengurangan teknologi dalam kelas", "Fokus pada hafalan", "Pembelajaran tanpa media"], a: 1 },
+            { q: "Penggunaan video dan buku cerita digital dalam pembelajaran anak termasuk dalam...", options: ["Gamifikasi", "Integrasi alat digital", "Evaluasi pembelajaran", "Metode tradisional", "Behaviorisme"], a: 1 },
+            { q: "Agar efektif, konten digital untuk anak harus...", options: ["Kompleks dan panjang", "Disesuaikan dengan perkembangan anak", "Berbasis teks saja", "Menghindari visual", "Tanpa interaksi"], a: 1 },
+            { q: "Blended learning merupakan...", options: ["Pembelajaran tanpa teknologi", "Kombinasi pembelajaran online dan tatap muka", "Pembelajaran berbasis game", "Pembelajaran mandiri", "Pembelajaran tradisional"], a: 1 },
+            { q: "Digital Game-Based Language Learning (DGBLL) berfungsi untuk...", options: ["Mengurangi interaksi", "Meningkatkan hafalan saja", "Menciptakan pembelajaran konstruktivis", "Menggantikan guru", "Mengurangi motivasi"], a: 2 },
+            { q: "Seorang guru menggunakan chatbot untuk latihan percakapan bahasa asing. Pendekatan ini mencerminkan...", options: ["Metode konvensional", "Lingkungan belajar interaktif berbasis AI", "Pembelajaran pasif", "Evaluasi sumatif", "Drill manual"], a: 1 },
+            { q: "Jika siswa lebih menyukai metode tradisional dibanding e-learning, maka strategi terbaik adalah...", options: ["Menghapus e-learning", "Menggunakan blended learning", "Memaksakan teknologi", "Mengurangi materi", "Menghindari interaksi"], a: 1 },
+            { q: "Penggunaan WhatsApp untuk latihan bahasa asing termasuk...", options: ["Pembelajaran formal", "Media sosial sebagai alat komunikasi", "Metode tradisional", "Evaluasi", "Behaviorisme"], a: 1 },
+            { q: "Film dalam pembelajaran bahasa asing berfungsi untuk...", options: ["Mengurangi materi", "Meningkatkan motivasi dan pemahaman budaya", "Menggantikan guru", "Menghindari latihan", "Mengurangi interaksi"], a: 1 },
+            { q: "Multilingual Digital Storytelling (MDST) paling tepat digunakan untuk...", options: ["Siswa dewasa saja", "Anak dengan kebutuhan khusus", "Evaluasi akhir", "Hafalan kosakata", "Ceramah"], a: 1 },
+            { q: "Mengapa interaksi dengan agen digital atau pendamping penting?", options: ["Mengurangi biaya", "Meningkatkan efektivitas pembelajaran", "Menggantikan guru", "Mempercepat evaluasi", "Mengurangi materi"], a: 1 },
+            { q: "Jika guru tidak memiliki literasi digital yang cukup, dampaknya adalah...", options: ["Pembelajaran lebih efektif", "Pemanfaatan teknologi tidak optimal", "Siswa lebih mandiri", "Materi lebih mudah", "Tidak ada pengaruh"], a: 1 },
+            { q: "Salah satu keunggulan Web 2.0 dalam pembelajaran bahasa adalah...", options: ["Tidak interaktif", "Menyediakan konteks komunikasi realistis", "Mengurangi kolaborasi", "Berbasis teks saja", "Tidak relevan"], a: 1 },
+            { q: "Jika konten digital tidak sesuai usia anak, maka risiko utamanya adalah...", options: ["Pembelajaran lebih cepat", "Overload kognitif dan kebingungan", "Motivasi meningkat", "Hasil belajar meningkat", "Interaksi meningkat"], a: 1 },
+            { q: "Orang tua mendukung media digital tetapi khawatir terhadap kualitas konten. Solusi terbaik adalah...", options: ["Menghapus media digital", "Kurasi dan seleksi konten berkualitas", "Mengurangi pembelajaran", "Menghindari teknologi", "Memberi tugas tambahan"], a: 1 },
+            { q: "Model pembelajaran paling efektif di era digital adalah...", options: ["Ceramah tradisional", "Digitalisasi tanpa interaksi", "Integrasi digital dan interaktivitas", "Pembelajaran mandiri saja", "Tanpa evaluasi"], a: 2 },
+            { q: "Untuk meningkatkan keterlibatan siswa, strategi terbaik adalah...", options: ["Materi panjang", "Media interaktif dan kontekstual", "Hafalan", "Ceramah", "Tanpa teknologi"], a: 1 },
+            { q: "Evaluasi keberhasilan pembelajaran digital seharusnya didasarkan pada...", options: ["Jumlah aplikasi", "Tampilan menarik", "Peningkatan keterampilan bahasa dan partisipasi", "Durasi belajar", "Banyaknya media"], a: 2 },
+            { q: "Jika pembelajaran digital tidak meningkatkan hasil belajar, maka analisis yang tepat adalah...", options: ["Teknologi tidak berguna", "Desain pembelajaran kurang tepat", "Siswa tidak mampu", "Harus dihentikan", "Materi terlalu mudah"], a: 1 },
+            { q: "Seorang guru menggabungkan video, chatbot, dan media sosial dalam pembelajaran. Pendekatan ini menunjukkan...", options: ["Pembelajaran konvensional", "Integrasi digital dan interaktivitas yang komprehensif", "Pembelajaran pasif", "Evaluasi akhir", "Drill tradisional"], a: 1 }
+        ];
+
+        // RENDER SOAL
+        const renderQuiz = () => {
+            const container = document.getElementById('questions-container');
+            let html = '';
+
+            quizData.forEach((item, index) => {
+                let optionsHtml = '';
+                item.options.forEach((opt, optIndex) => {
+                    optionsHtml += `
+                        <div class="relative">
+                            <input type="radio" name="q${index}" value="${optIndex}" id="q${index}_${optIndex}" class="option-input peer sr-only" onchange="window.updateProgress()">
+                            <label for="q${index}_${optIndex}" class="option-label flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:bg-indigo-50 peer-focus:ring-2 peer-focus:ring-indigo-500 peer-focus:ring-offset-2">
+                                <div class="circle-check w-5 h-5 border-2 border-gray-300 rounded-full mr-3 flex-shrink-0 transition-colors"></div>
+                                <span class="text-sm font-medium text-gray-700">${opt}</span>
+                            </label>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    <div class="glass-panel p-6 rounded-2xl animate-fade-in-up" style="animation-delay: ${index * 0.05}s">
+                        <div class="flex items-start gap-3 mb-4">
+                            <span class="bg-brand text-white font-bold px-2 py-1 rounded text-xs shadow-sm">No. ${index + 1}</span>
+                            <p class="font-bold text-gray-800 text-base leading-snug">${item.q}</p>
+                        </div>
+                        <div class="space-y-3">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        };
+
+        // START QUIZ
+        window.startQuiz = () => {
+            document.getElementById('start-panel').classList.add('hidden');
+            document.getElementById('quiz-form').classList.remove('hidden');
+            document.getElementById('timer-display').classList.remove('hidden');
+            document.getElementById('timer-display').scrollIntoView({ behavior: 'smooth' });
+
+            quizInterval = setInterval(() => {
+                timeRemaining--;
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                document.getElementById('time-left').innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeRemaining <= 300) document.getElementById('timer-display').classList.add('timer-warning');
+                if (timeRemaining <= 0) {
+                    clearInterval(quizInterval);
+                    Swal.fire({ title: 'Waktu Habis!', text: 'Dikirim otomatis.', icon: 'info', timer: 2000, showConfirmButton: false }).then(() => window.submitQuiz());
+                }
+            }, 1000);
+        };
+
+        window.updateProgress = () => {
+            const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+            document.getElementById('answered-count').innerText = answered;
+        };
+
+        // SUBMIT
+        window.submitQuiz = async () => {
+            if(quizInterval) clearInterval(quizInterval);
+            const btn = document.getElementById('btn-submit');
+            const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+            
+            if (timeRemaining > 0 && answered < quizData.length) {
+                Swal.fire({
+                    title: 'Belum Selesai',
+                    text: `Baru menjawab ${answered}/${quizData.length}. Yakin kirim?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Kirim',
+                    cancelButtonText: 'Lanjut'
+                }).then((result) => {
+                    if (result.isConfirmed) processScore();
+                    else {
+                        quizInterval = setInterval(() => {
+                            timeRemaining--;
+                        }, 1000);
+                    }
+                });
+                return;
+            }
+            processScore();
+        };
+
+        const processScore = async () => {
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Menilai...';
+
+            let correct = 0;
+            quizData.forEach((item, index) => {
+                const selectedEl = document.querySelector(`input[name="q${index}"]:checked`);
+                if (selectedEl && parseInt(selectedEl.value) === item.a) correct++;
+            });
+
+            const score = Math.round((correct / quizData.length) * 100);
+
+            try {
+                if (currentUser) {
+                    const userRef = doc(db, "users", currentUser.uid);
+                    await updateDoc(userRef, { "scores.8": score }); // Save to score 8
+
+                    if (score >= 80) {
+                        confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+                        await Swal.fire({
+                            title: 'Luar Biasa!',
+                            html: `Nilai: <span class="text-5xl font-bold text-brand block my-4">${score}</span>Materi selanjutnya terbuka!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ke Dashboard',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                    } else {
+                        await Swal.fire({
+                            title: 'Belum Lulus',
+                            html: `Nilai: <span class="text-5xl font-bold text-red-500 block my-4">${score}</span>Butuh 80 untuk lulus.`,
+                            icon: 'error',
+                            confirmButtonText: 'Coba Lagi',
+                            confirmButtonColor: '#f59e0b'
+                        });
+                    }
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+                btn.disabled = false;
+                btn.innerText = 'Kirim Jawaban';
+            }
+        };
+
+        // INIT & TIME TRACKER
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
+                
+                if (docSnap.exists()) {
+                    document.getElementById('user-name').innerText = docSnap.data().name;
+                    
+                    // -- MONTHLY TIME TRACKING (Connected to Admin logic in index.html) --
+                    const now = new Date();
+                    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                    
+                    if (!window.durationTracker) {
+                        window.durationTracker = setInterval(async () => {
+                            try {
+                                const snap = await getDoc(userRef);
+                                if (snap.exists()) {
+                                    let d = snap.data();
+                                    let stats = d.monthlyStats || {};
+                                    if (!stats[currentMonth]) stats[currentMonth] = { access: 1, duration: 0 };
+                                    stats[currentMonth].duration = (stats[currentMonth].duration || 0) + 1;
+                                    await updateDoc(userRef, { monthlyStats: stats });
+                                }
+                            } catch (e) {
+                                console.error("Gagal update durasi:", e);
+                            }
+                        }, 60000); // Trigger every 1 minute
+                    }
+                }
+                renderQuiz();
+            } else {
+                Swal.fire({
+                    title: 'Sesi Tidak Ditemukan',
+                    text: 'Silakan login kembali.',
+                    icon: 'warning',
+                    confirmButtonText: 'Login',
+                    allowOutsideClick: false
+                }).then(() => { window.location.href = 'index.html'; });
+            }
+        });
+    </script>
+</body>
+</html>
